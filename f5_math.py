@@ -8,8 +8,8 @@ arithmetic operators (+, -, *, /, //, %) and comparisons are used,
 which the project description permits.
 
 Build order (one commit per function):
-    1. absolute, floor_int   <- this commit
-    2. pow_int
+    1. absolute, floor_int
+    2. pow_int              <- this commit
     3. ln
     4. exp
 """
@@ -38,3 +38,26 @@ def floor_int(y):
     if y < 0 and y != n:    # negative and not already a whole number
         n -= 1
     return n
+
+
+def pow_int(b, n):
+    """Return b**n for a whole number n >= 0, by squaring.
+
+    Persona context (Elodie): a culture that doubles every hour has a
+    growth factor of 2**13 after 13 hours. Since 13 = 8 + 4 + 1
+    (binary 1101), we can build 2**13 from repeated squares:
+    2**13 = 2**8 * 2**4 * 2**1. This needs only ~log2(n) rounds
+    (4 rounds for n = 13; ~10 for n = 1000) instead of n
+    multiplications, so it is both faster and accumulates less
+    floating-point rounding error.
+
+    The integer part of the exponent is computed EXACTLY this way,
+    which is the reason Algorithm B splits x = n + f (D1/Problem 3).
+    """
+    result = 1.0
+    while n > 0:
+        if n % 2 == 1:      # current binary digit of n is 1
+            result *= b     # this power belongs in the answer
+        b *= b              # b becomes b^2, b^4, b^8, ...
+        n //= 2             # move to the next binary digit
+    return result
