@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 540" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#444"/>
+    </marker>
+  </defs>
+  <style>
+    .box  { fill:#eaf2fb; stroke:#2f5c8f; stroke-width:1.5; }
+    .term { fill:#e8f5e9; stroke:#2e7d32; stroke-width:1.5; }
+    .dec  { fill:#fff8e1; stroke:#b28704; stroke-width:1.5; }
+    .t    { font-size:16px; fill:#222; }
+    .s    { font-size:12.5px; fill:#666; }
+    .lbl  { font-size:13px; font-style:italic; fill:#666; }
+    .ttl  { font-size:19px; font-weight:bold; fill:#222; }
+    line, polyline { stroke:#444; stroke-width:1.5; fill:none; }
+  </style>
+
+  <text class="ttl" x="220" y="30" text-anchor="middle">floor_int(y)  &#8212;  greatest integer &#8804; y</text>
+
+  <ellipse class="term" cx="220" cy="75" rx="70" ry="22"/>
+  <text class="t" x="220" y="80" text-anchor="middle">Start</text>
+  <line x1="220" y1="97" x2="220" y2="123" marker-end="url(#a)"/>
+
+  <rect class="box" x="115" y="123" width="210" height="52" rx="8"/>
+  <text class="t" x="220" y="145" text-anchor="middle">n = int(y)</text>
+  <text class="s" x="220" y="164" text-anchor="middle">cuts off decimals, toward zero</text>
+  <line x1="220" y1="175" x2="220" y2="203" marker-end="url(#a)"/>
+
+  <polygon class="dec" points="220,203 335,258 220,313 105,258"/>
+  <text class="t" x="220" y="252" text-anchor="middle">y &lt; 0  and</text>
+  <text class="t" x="220" y="273" text-anchor="middle">y &#8800; n ?</text>
+
+  <polyline points="105,258 55,258 55,348" marker-end="url(#a)"/>
+  <text class="lbl" x="80" y="250">yes</text>
+  <rect class="box" x="10" y="348" width="120" height="52" rx="8"/>
+  <text class="t" x="70" y="370" text-anchor="middle">n = n &#8722; 1</text>
+  <text class="s" x="70" y="389" text-anchor="middle">-2.5: &#8722;2 &#8594; &#8722;3</text>
+
+  <polyline points="335,258 385,258 385,435"/>
+  <text class="lbl" x="345" y="250">no</text>
+
+  <polyline points="55,400 55,435 220,435"/>
+  <polyline points="385,435 220,435"/>
+  <line x1="220" y1="435" x2="220" y2="458" marker-end="url(#a)"/>
+
+  <ellipse class="term" cx="220" cy="485" rx="85" ry="24"/>
+  <text class="t" x="220" y="490" text-anchor="middle">Return n</text>
+</svg>

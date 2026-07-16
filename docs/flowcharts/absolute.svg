@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 430" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#444"/>
+    </marker>
+  </defs>
+  <style>
+    .box  { fill:#eaf2fb; stroke:#2f5c8f; stroke-width:1.5; rx:8; }
+    .term { fill:#e8f5e9; stroke:#2e7d32; stroke-width:1.5; }
+    .dec  { fill:#fff8e1; stroke:#b28704; stroke-width:1.5; }
+    .t    { font-size:16px; fill:#222; }
+    .lbl  { font-size:13px; font-style:italic; fill:#666; }
+    .ttl  { font-size:19px; font-weight:bold; fill:#222; }
+    line, polyline { stroke:#444; stroke-width:1.5; fill:none; }
+  </style>
+
+  <text class="ttl" x="200" y="30" text-anchor="middle">absolute(y)  &#8212;  returns |y|</text>
+
+  <ellipse class="term" cx="200" cy="75" rx="70" ry="22"/>
+  <text class="t" x="200" y="80" text-anchor="middle">Start</text>
+  <line x1="200" y1="97" x2="200" y2="125" marker-end="url(#a)"/>
+
+  <polygon class="dec" points="200,125 285,170 200,215 115,170"/>
+  <text class="t" x="200" y="175" text-anchor="middle">y &lt; 0 ?</text>
+
+  <polyline points="115,170 60,170 60,255" marker-end="url(#a)"/>
+  <text class="lbl" x="88" y="162">yes</text>
+  <rect class="box" x="15" y="255" width="90" height="42" rx="8"/>
+  <text class="t" x="60" y="281" text-anchor="middle">return &#8722;y</text>
+
+  <polyline points="285,170 340,170 340,255" marker-end="url(#a)"/>
+  <text class="lbl" x="300" y="162">no</text>
+  <rect class="box" x="295" y="255" width="90" height="42" rx="8"/>
+  <text class="t" x="340" y="281" text-anchor="middle">return y</text>
+
+  <polyline points="60,297 60,340 200,340"/>
+  <polyline points="340,297 340,340 200,340"/>
+  <line x1="200" y1="340" x2="200" y2="362" marker-end="url(#a)"/>
+  <ellipse class="term" cx="200" cy="385" rx="70" ry="22"/>
+  <text class="t" x="200" y="390" text-anchor="middle">End</text>
+</svg>
