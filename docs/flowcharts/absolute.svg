@@ -1,41 +1,60 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 430" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 470" font-family="Helvetica, Arial, sans-serif">
   <defs>
     <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
       <path d="M0,0 L7,3 L0,6 z" fill="#444"/>
     </marker>
   </defs>
   <style>
-    .box  { fill:#eaf2fb; stroke:#2f5c8f; stroke-width:1.5; rx:8; }
+    .box  { fill:#eaf2fb; stroke:#2f5c8f; stroke-width:1.5; }
     .term { fill:#e8f5e9; stroke:#2e7d32; stroke-width:1.5; }
     .dec  { fill:#fff8e1; stroke:#b28704; stroke-width:1.5; }
-    .t    { font-size:16px; fill:#222; }
+    .pan  { fill:#fdf6f0; stroke:#c77d48; stroke-width:1.5; }
+    .t    { font-size:15px; fill:#222; }
+    .s    { font-size:12.5px; fill:#555; }
     .lbl  { font-size:13px; font-style:italic; fill:#666; }
     .ttl  { font-size:19px; font-weight:bold; fill:#222; }
+    .sub  { font-size:14px; font-weight:bold; fill:#8a4b1d; }
     line, polyline { stroke:#444; stroke-width:1.5; fill:none; }
   </style>
 
-  <text class="ttl" x="200" y="30" text-anchor="middle">absolute(y)  &#8212;  returns |y|</text>
+  <text class="ttl" x="215" y="32" text-anchor="middle">absolute(y): returns |y|</text>
 
-  <ellipse class="term" cx="200" cy="75" rx="70" ry="22"/>
-  <text class="t" x="200" y="80" text-anchor="middle">Start</text>
-  <line x1="200" y1="97" x2="200" y2="125" marker-end="url(#a)"/>
+  <ellipse class="term" cx="215" cy="82" rx="80" ry="23"/>
+  <text class="t" x="215" y="87" text-anchor="middle">Start: input y</text>
+  <line x1="215" y1="105" x2="215" y2="135" marker-end="url(#a)"/>
 
-  <polygon class="dec" points="200,125 285,170 200,215 115,170"/>
-  <text class="t" x="200" y="175" text-anchor="middle">y &lt; 0 ?</text>
+  <polygon class="dec" points="215,135 300,182 215,229 130,182"/>
+  <text class="t" x="215" y="187" text-anchor="middle">y &lt; 0 ?</text>
 
-  <polyline points="115,170 60,170 60,255" marker-end="url(#a)"/>
-  <text class="lbl" x="88" y="162">yes</text>
-  <rect class="box" x="15" y="255" width="90" height="42" rx="8"/>
-  <text class="t" x="60" y="281" text-anchor="middle">return &#8722;y</text>
+  <polyline points="130,182 70,182 70,268" marker-end="url(#a)"/>
+  <text class="lbl" x="100" y="174">yes</text>
+  <rect class="box" x="20" y="268" width="100" height="42" rx="8"/>
+  <text class="t" x="70" y="294" text-anchor="middle">y = 0 &#8722; y</text>
 
-  <polyline points="285,170 340,170 340,255" marker-end="url(#a)"/>
-  <text class="lbl" x="300" y="162">no</text>
-  <rect class="box" x="295" y="255" width="90" height="42" rx="8"/>
-  <text class="t" x="340" y="281" text-anchor="middle">return y</text>
+  <polyline points="300,182 360,182 360,268" marker-end="url(#a)"/>
+  <text class="lbl" x="315" y="174">no</text>
+  <rect class="box" x="310" y="268" width="100" height="42" rx="8"/>
+  <text class="t" x="360" y="294" text-anchor="middle">keep y</text>
 
-  <polyline points="60,297 60,340 200,340"/>
-  <polyline points="340,297 340,340 200,340"/>
-  <line x1="200" y1="340" x2="200" y2="362" marker-end="url(#a)"/>
-  <ellipse class="term" cx="200" cy="385" rx="70" ry="22"/>
-  <text class="t" x="200" y="390" text-anchor="middle">End</text>
+  <polyline points="70,310 70,355 215,355"/>
+  <polyline points="360,310 360,355 215,355"/>
+  <line x1="215" y1="355" x2="215" y2="380" marker-end="url(#a)"/>
+
+  <ellipse class="term" cx="215" cy="408" rx="80" ry="24"/>
+  <text class="t" x="215" y="413" text-anchor="middle">Return y</text>
+
+  <rect class="pan" x="470" y="55" width="390" height="380" rx="10"/>
+  <text class="sub" x="665" y="88" text-anchor="middle">Where F5 needs this</text>
+  <text class="t" x="490" y="122">1. Stopping rule inside ln and exp:</text>
+  <text class="s" x="510" y="144">keep adding terms while |term| &#8805; epsilon.</text>
+  <text class="s" x="510" y="164">A term of &#8722;0.00004 is still large, so the</text>
+  <text class="s" x="510" y="184">size matters, not the sign:</text>
+  <text class="t" x="510" y="210">absolute(&#8722;0.00004) = 0.00004</text>
+  <text class="t" x="490" y="248">2. Negative base handling:</text>
+  <text class="s" x="510" y="270">Elodie enters b = &#8722;2 with a whole x.</text>
+  <text class="s" x="510" y="290">F5 computes with |b| = 2 first, then puts</text>
+  <text class="s" x="510" y="310">the sign back at the end (FR 05).</text>
+  <text class="t" x="490" y="348">Written by hand so the built in abs()</text>
+  <text class="t" x="490" y="370">is never used: the from scratch rule</text>
+  <text class="t" x="490" y="392">of D2 Problem 5 stays airtight.</text>
 </svg>
