@@ -9,10 +9,14 @@ which the project description permits.
 
 Build order (one commit per function):
     1. absolute, floor_int
-    2. pow_int              <- this commit
-    3. ln
+    2. pow_int
+    3. ln                   <- this commit
     4. exp
 """
+
+EPSILON = 1e-12   # series stopping tolerance; supports NFR-01
+                  # (at least 6 significant digits, with margin)
+MAX_ITER = 10000  # safety cap so a series can never loop forever
 
 
 def absolute(y):
@@ -61,3 +65,49 @@ def pow_int(b, n):
         b *= b              # b becomes b^2, b^4, b^8, ...
         n //= 2             # move to the next binary digit
     return result
+
+
+def _ln_series(m, eps, max_iter):
+    """Series part of ln, for m in [1, 2): ln(m) = 2(t + t^3/3 + ...)
+    with t = (m - 1)/(m + 1). For m in [1, 2), |t| <= 1/3, so every
+    new term is at least 9 times smaller: fast, guaranteed progress.
+    """
+    t = (m - 1.0) / (m + 1.0)
+    t2 = t * t
+    term = t
+    total = 0.0
+    k = 0
+    while absolute(term / (2 * k + 1)) >= eps:
+        if k >= max_iter:
+            raise ArithmeticError("ln series failed to converge.")
+        total += term / (2 * k + 1)
+        term *= t2
+        k += 1
+    return 2.0 * total
+
+
+def ln(b, eps=EPSILON, max_iter=MAX_ITER):
+    """Natural logarithm of b > 0, from scratch.
+
+    D2 improvement over D1 (responds to flash feedback): RANGE
+    REDUCTION. Write b = m * 2**p with m in [1, 2); then
+        ln(b) = ln(m) + p * ln(2).
+    The series runs only on m, where it converges fast, so extreme
+    bases (b = 1e15 or b = 1e-15) no longer cause slow convergence.
+    ln(2) is computed once by the same series, so nothing is copied
+    from a table.
+    """
+    if b <= 0:
+        raise ArithmeticError("ln is defined only for positive arguments.")
+    p = 0
+    m = b
+    while m >= 2.0:      # too big: halve, and remember how often
+        m /= 2.0
+        p += 1
+    while m < 1.0:       # too small: double, and remember how often
+        m *= 2.0
+        p -= 1
+    return _ln_series(m, eps, max_iter) + p * _LN2
+
+
+_LN2 = _ln_series(2.0, EPSILON, MAX_ITER)  # computed once, from scratch

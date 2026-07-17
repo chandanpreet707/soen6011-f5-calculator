@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 720" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#444"/>
+    </marker>
+  </defs>
+  <style>
+    .box  { fill:#eaf2fb; stroke:#2f5c8f; stroke-width:1.5; }
+    .term { fill:#e8f5e9; stroke:#2e7d32; stroke-width:1.5; }
+    .dec  { fill:#fff8e1; stroke:#b28704; stroke-width:1.5; }
+    .err  { fill:#fdecea; stroke:#b3392e; stroke-width:1.5; }
+    .pan  { fill:#fdf6f0; stroke:#c77d48; stroke-width:1.5; }
+    .t    { font-size:15px; fill:#222; }
+    .s    { font-size:12.5px; fill:#555; }
+    .lbl  { font-size:13px; font-style:italic; fill:#666; }
+    .ttl  { font-size:19px; font-weight:bold; fill:#222; }
+    .sub  { font-size:14px; font-weight:bold; fill:#8a4b1d; }
+    .hd   { font-size:13px; font-weight:bold; fill:#5a3517; }
+    .cell { font-size:14px; fill:#333; }
+    line, polyline { stroke:#444; stroke-width:1.5; fill:none; }
+    .rule { stroke:#d9b394; stroke-width:1; }
+  </style>
+
+  <text class="ttl" x="235" y="30" text-anchor="middle">ln(b): natural logarithm, from scratch</text>
+
+  <ellipse class="term" cx="235" cy="78" rx="95" ry="23"/>
+  <text class="t" x="235" y="83" text-anchor="middle">Start: input b</text>
+  <line x1="235" y1="101" x2="235" y2="126" marker-end="url(#a)"/>
+
+  <polygon class="dec" points="235,126 320,172 235,218 150,172"/>
+  <text class="t" x="235" y="177" text-anchor="middle">b &gt; 0 ?</text>
+
+  <polyline points="320,172 415,172" marker-end="url(#a)"/>
+  <text class="lbl" x="340" y="164">no</text>
+  <rect class="err" x="415" y="150" width="150" height="44" rx="8"/>
+  <text class="t" x="490" y="171" text-anchor="middle">Domain error:</text>
+  <text class="s" x="490" y="188" text-anchor="middle">ln needs b &gt; 0</text>
+
+  <line x1="235" y1="218" x2="235" y2="244" marker-end="url(#a)"/>
+  <text class="lbl" x="248" y="236">yes</text>
+
+  <rect class="box" x="110" y="244" width="250" height="72" rx="8"/>
+  <text class="t" x="235" y="268" text-anchor="middle">Range reduction:</text>
+  <text class="t" x="235" y="288" text-anchor="middle">halve or double b into m</text>
+  <text class="s" x="235" y="306" text-anchor="middle">m in [1, 2), count p steps</text>
+  <line x1="235" y1="316" x2="235" y2="342" marker-end="url(#a)"/>
+
+  <rect class="box" x="110" y="342" width="250" height="56" rx="8"/>
+  <text class="t" x="235" y="365" text-anchor="middle">t = (m &#8722; 1) / (m + 1)</text>
+  <text class="s" x="235" y="385" text-anchor="middle">now |t| &#8804; 1/3, small and safe</text>
+  <line x1="235" y1="398" x2="235" y2="424" marker-end="url(#a)"/>
+
+  <rect class="box" x="110" y="424" width="250" height="72" rx="8"/>
+  <text class="t" x="235" y="448" text-anchor="middle">Sum the series</text>
+  <text class="t" x="235" y="468" text-anchor="middle">t + t&#179;/3 + t&#8305;/5 + &#8230;</text>
+  <text class="s" x="235" y="486" text-anchor="middle">stop when a term &lt; epsilon</text>
+  <line x1="235" y1="496" x2="235" y2="522" marker-end="url(#a)"/>
+
+  <rect class="box" x="110" y="522" width="250" height="56" rx="8"/>
+  <text class="t" x="235" y="545" text-anchor="middle">ln(b) = 2 &#183; sum + p &#183; ln(2)</text>
+  <text class="s" x="235" y="565" text-anchor="middle">undo the reduction</text>
+  <line x1="235" y1="578" x2="235" y2="604" marker-end="url(#a)"/>
+
+  <ellipse class="term" cx="235" cy="632" rx="95" ry="24"/>
+  <text class="t" x="235" y="637" text-anchor="middle">Return ln(b)</text>
+
+  <rect class="pan" x="590" y="220" width="310" height="480" rx="10"/>
+  <text class="sub" x="745" y="252" text-anchor="middle">Worked example: b = 10</text>
+
+  <text class="t" x="610" y="284">Reduce: 10 &#8594; 5 &#8594; 2.5 &#8594; 1.25</text>
+  <text class="s" x="610" y="306">three halvings, so p = 3, m = 1.25</text>
+
+  <text class="t" x="610" y="340">t = 0.25 / 2.25 = 1/9</text>
+  <text class="s" x="610" y="362">each term shrinks 81 times: 6 terms</text>
+  <text class="s" x="610" y="382">reach 12 decimal digits</text>
+
+  <text class="t" x="610" y="416">ln(10) = ln(1.25) + 3 &#183; ln(2)</text>
+  <text class="s" x="610" y="438">= 0.22314 + 3 &#183; 0.69315 = 2.30259</text>
+
+  <line class="rule" x1="605" y1="458" x2="885" y2="458"/>
+  <text class="hd" x="655" y="480" text-anchor="middle">base b</text>
+  <text class="hd" x="762" y="480" text-anchor="middle">D1 terms</text>
+  <text class="hd" x="850" y="480" text-anchor="middle">D2 terms</text>
+  <line class="rule" x1="605" y1="490" x2="885" y2="490"/>
+  <line class="rule" x1="712" y1="458" x2="712" y2="610"/>
+  <line class="rule" x1="812" y1="458" x2="812" y2="610"/>
+
+  <text class="cell" x="655" y="513" text-anchor="middle">1.4</text>
+  <text class="cell" x="762" y="513" text-anchor="middle">7</text>
+  <text class="cell" x="850" y="513" text-anchor="middle">7</text>
+  <text class="cell" x="655" y="543" text-anchor="middle">10</text>
+  <text class="cell" x="762" y="543" text-anchor="middle">57</text>
+  <text class="cell" x="850" y="543" text-anchor="middle">6</text>
+  <text class="cell" x="655" y="573" text-anchor="middle">one million</text>
+  <text class="cell" x="762" y="573" text-anchor="middle">fails</text>
+  <text class="cell" x="850" y="573" text-anchor="middle">11</text>
+  <text class="cell" x="655" y="603" text-anchor="middle">10 to the 15</text>
+  <text class="cell" x="762" y="603" text-anchor="middle">fails</text>
+  <text class="cell" x="850" y="603" text-anchor="middle">10</text>
+  <line class="rule" x1="605" y1="610" x2="885" y2="610"/>
+
+  <text class="s" x="610" y="640">D1 hit its iteration cap and raised an</text>
+  <text class="s" x="610" y="660">error for extreme bases. D2 handles</text>
+  <text class="s" x="610" y="680">them in about ten terms.</text>
+</svg>
