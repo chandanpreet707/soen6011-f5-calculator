@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#444"/>
+    </marker>
+  </defs>
+  <style>
+    .box  { fill:#eaf2fb; stroke:#2f5c8f; stroke-width:1.5; }
+    .term { fill:#e8f5e9; stroke:#2e7d32; stroke-width:1.5; }
+    .dec  { fill:#fff8e1; stroke:#b28704; stroke-width:1.5; }
+    .pan  { fill:#fdf6f0; stroke:#c77d48; stroke-width:1.5; }
+    .t    { font-size:15px; fill:#222; }
+    .s    { font-size:12.5px; fill:#555; }
+    .lbl  { font-size:13px; font-style:italic; fill:#666; }
+    .ttl  { font-size:19px; font-weight:bold; fill:#222; }
+    .sub  { font-size:14px; font-weight:bold; fill:#8a4b1d; }
+    .hd   { font-size:13px; font-weight:bold; fill:#5a3517; }
+    .cell { font-size:14px; fill:#333; }
+    line, polyline { stroke:#444; stroke-width:1.5; fill:none; }
+    .rule { stroke:#d9b394; stroke-width:1; }
+  </style>
+
+  <text class="ttl" x="235" y="30" text-anchor="middle">exp(y): exponential, from scratch</text>
+
+  <ellipse class="term" cx="235" cy="76" rx="90" ry="22"/>
+  <text class="t" x="235" y="81" text-anchor="middle">Start: input y</text>
+  <line x1="235" y1="98" x2="235" y2="124" marker-end="url(#a)"/>
+
+  <polygon class="dec" points="235,124 320,168 235,212 150,168"/>
+  <text class="t" x="235" y="173" text-anchor="middle">y &lt; 0 ?</text>
+
+  <polyline points="320,168 400,168" marker-end="url(#a)"/>
+  <text class="lbl" x="345" y="160">yes</text>
+  <rect class="box" x="400" y="144" width="200" height="48" rx="8"/>
+  <text class="t" x="500" y="165" text-anchor="middle">return 1 / exp(&#8722;y)</text>
+  <text class="s" x="500" y="183" text-anchor="middle">positive case, no cancellation</text>
+
+  <line x1="235" y1="212" x2="235" y2="240" marker-end="url(#a)"/>
+  <text class="lbl" x="248" y="230">no</text>
+
+  <rect class="box" x="130" y="240" width="210" height="48" rx="8"/>
+  <text class="t" x="235" y="262" text-anchor="middle">term = 1, total = 1</text>
+  <text class="s" x="235" y="280" text-anchor="middle">k = 1</text>
+  <line x1="235" y1="288" x2="235" y2="314" marker-end="url(#a)"/>
+
+  <polygon class="dec" points="235,314 335,362 235,410 135,362"/>
+  <text class="t" x="235" y="359" text-anchor="middle">|term| &#8805;</text>
+  <text class="t" x="235" y="379" text-anchor="middle">epsilon ?</text>
+
+  <polyline points="135,362 70,362 70,440" marker-end="url(#a)"/>
+  <text class="lbl" x="95" y="354">yes</text>
+  <rect class="box" x="10" y="440" width="120" height="66" rx="8"/>
+  <text class="t" x="70" y="462" text-anchor="middle">term *= y/k</text>
+  <text class="t" x="70" y="482" text-anchor="middle">total += term</text>
+  <text class="t" x="70" y="500" text-anchor="middle">k += 1</text>
+  <polyline points="70,506 70,540 235,540 235,410"/>
+  <text class="lbl" x="150" y="533">loop back</text>
+
+  <polyline points="335,362 400,362" marker-end="url(#a)"/>
+  <text class="lbl" x="352" y="354">no</text>
+  <ellipse class="term" cx="475" cy="362" rx="80" ry="23"/>
+  <text class="t" x="475" y="367" text-anchor="middle">return total</text>
+
+  <rect class="pan" x="620" y="220" width="270" height="400" rx="10"/>
+  <text class="sub" x="755" y="250" text-anchor="middle">Why the sign check matters</text>
+  <text class="s" x="638" y="278">Elodie's decay culture, b = 0.5:</text>
+  <text class="s" x="638" y="298">the fractional term needs exp of a</text>
+  <text class="s" x="638" y="318">negative number.</text>
+
+  <line class="rule" x1="635" y1="338" x2="875" y2="338"/>
+  <text class="hd" x="675" y="358" text-anchor="middle">y</text>
+  <text class="hd" x="750" y="358" text-anchor="middle">D1 error</text>
+  <text class="hd" x="835" y="358" text-anchor="middle">D2 error</text>
+  <line class="rule" x1="635" y1="368" x2="875" y2="368"/>
+  <line class="rule" x1="712" y1="338" x2="712" y2="500"/>
+  <line class="rule" x1="792" y1="338" x2="792" y2="500"/>
+
+  <text class="cell" x="675" y="391" text-anchor="middle">&#8722;5</text>
+  <text class="cell" x="750" y="391" text-anchor="middle">1e&#8722;11</text>
+  <text class="cell" x="835" y="391" text-anchor="middle">6e&#8722;16</text>
+  <text class="cell" x="675" y="421" text-anchor="middle">&#8722;20</text>
+  <text class="cell" x="750" y="421" text-anchor="middle">2.0</text>
+  <text class="cell" x="835" y="421" text-anchor="middle">4e&#8722;16</text>
+  <text class="cell" x="675" y="451" text-anchor="middle">&#8722;30</text>
+  <text class="cell" x="750" y="451" text-anchor="middle">6e+7</text>
+  <text class="cell" x="835" y="451" text-anchor="middle">3e&#8722;16</text>
+  <text class="cell" x="675" y="481" text-anchor="middle">&#8722;40</text>
+  <text class="cell" x="750" y="481" text-anchor="middle">7e+16</text>
+  <text class="cell" x="835" y="481" text-anchor="middle">4e&#8722;16</text>
+  <line class="rule" x1="635" y1="500" x2="875" y2="500"/>
+
+  <text class="s" x="638" y="528">At y = &#8722;30 the raw series is wrong</text>
+  <text class="s" x="638" y="548">by a factor of sixty million; large</text>
+  <text class="s" x="638" y="568">terms of opposite sign cancel and</text>
+  <text class="s" x="638" y="588">the digits are lost. The reciprocal</text>
+  <text class="s" x="638" y="608">form keeps full accuracy.</text>
+</svg>

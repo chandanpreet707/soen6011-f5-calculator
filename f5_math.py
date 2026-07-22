@@ -10,8 +10,8 @@ which the project description permits.
 Build order (one commit per function):
     1. absolute, floor_int
     2. pow_int
-    3. ln                   <- this commit
-    4. exp
+    3. ln
+    4. exp                  <- this commit
 """
 
 EPSILON = 1e-12   # series stopping tolerance; supports NFR-01
@@ -108,6 +108,35 @@ def ln(b, eps=EPSILON, max_iter=MAX_ITER):
         m *= 2.0
         p -= 1
     return _ln_series(m, eps, max_iter) + p * _LN2
+
+
+
+def exp(y, eps=EPSILON, max_iter=MAX_ITER):
+    """Exponential of y via the Maclaurin series 1 + y + y^2/2! + ...
+
+    Each term is the previous one times y/k, so no factorial is ever
+    formed. Truncation when |term| < eps bounds the error by the first
+    omitted term, meeting NFR-01.
+
+    For y < 0 the raw series alternates between large terms that nearly
+    cancel, destroying accuracy (catastrophic cancellation). D2 instead
+    computes exp(y) = 1 / exp(-y): the positive-argument series has only
+    positive terms and no cancellation. Defect found by testing the D1
+    design against a reference; matters for decay bases such as b = 0.5,
+    where f * ln b is negative (persona use case).
+    """
+    if y < 0:
+        return 1.0 / exp(-y, eps, max_iter)
+    term = 1.0
+    total = 1.0
+    k = 1
+    while absolute(term) >= eps:
+        if k >= max_iter:
+            raise ArithmeticError("exp series failed to converge.")
+        term *= y / k
+        total += term
+        k += 1
+    return total
 
 
 _LN2 = _ln_series(2.0, EPSILON, MAX_ITER)  # computed once, from scratch
