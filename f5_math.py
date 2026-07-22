@@ -14,6 +14,8 @@ Build order (one commit per function):
     4. exp                  <- this commit
 """
 
+from f5_errors import ConvergenceError, DomainError
+
 EPSILON = 1e-12   # series stopping tolerance; supports NFR-01
                   # (at least 6 significant digits, with margin)
 MAX_ITER = 10000  # safety cap so a series can never loop forever
@@ -79,7 +81,8 @@ def _ln_series(m, eps, max_iter):
     k = 0
     while absolute(term / (2 * k + 1)) >= eps:
         if k >= max_iter:
-            raise ArithmeticError("ln series failed to converge.")
+            raise ConvergenceError("The logarithm series failed to converge.",
+                                   "reduce the magnitude of b.")
         total += term / (2 * k + 1)
         term *= t2
         k += 1
@@ -98,7 +101,8 @@ def ln(b, eps=EPSILON, max_iter=MAX_ITER):
     from a table.
     """
     if b <= 0:
-        raise ArithmeticError("ln is defined only for positive arguments.")
+        raise DomainError("The logarithm is defined only for positive values.",
+                          "use b > 0.")
     p = 0
     m = b
     while m >= 2.0:      # too big: halve, and remember how often
@@ -132,7 +136,8 @@ def exp(y, eps=EPSILON, max_iter=MAX_ITER):
     k = 1
     while absolute(term) >= eps:
         if k >= max_iter:
-            raise ArithmeticError("exp series failed to converge.")
+            raise ConvergenceError("The exponential series failed to converge.",
+                                   "reduce the magnitude of x.")
         term *= y / k
         total += term
         k += 1
