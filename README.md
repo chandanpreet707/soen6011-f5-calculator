@@ -59,8 +59,11 @@ Subordinate functions, all from scratch:
 | `ln`        | atanh series with range reduction b = m·2^p, m in [1,2) |
 | `exp`       | Maclaurin series; negative arguments via e^y = 1/e^(-y) |
 
-Accuracy: worst relative error 4.6 × 10⁻¹¹ over the verification cases,
-well within the six-significant-digit target.
+Accuracy: worst relative error 4.6 × 10⁻¹¹ over the ten verification
+cases, well within the six-significant-digit target. `verify_f5.py` also
+checks five inputs that must be *rejected* (zero base with a non-positive
+exponent, negative base with a fractional exponent, and overflow and
+underflow), so the domain rules are evidenced rather than asserted.
 
 ## Project layout
 
@@ -76,9 +79,13 @@ well within the six-significant-digit target.
 Errors use a small custom hierarchy so the interface can show a cause and
 a corrective action rather than crashing:
 
+- `InputError` — an entry is empty, not a decimal number, or not finite
 - `DomainError` — input outside the real domain of a·b^x
 - `ConvergenceError` — a series exceeded its iteration limit
 - `RangeError` — a result too large or small to represent
+
+`F5Error` is the common base and is never raised directly, so a single
+`except F5Error` catches every calculator error.
 
 ## Domain rules
 
