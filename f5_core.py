@@ -16,6 +16,8 @@ fractional part, where it converges quickly.
 from f5_math import absolute, floor_int, pow_int, ln, exp
 from f5_errors import DomainError, RangeError
 
+_INF = float("inf")
+
 
 def compute_f5(a, b, x):
     """Return a * b**x on the real domain.
@@ -25,6 +27,9 @@ def compute_f5(a, b, x):
       FR-03  b = 0, x <= 0    rejected (0**0 and 0**negative undefined)
       FR-04  b < 0, x not int rejected (no real value)
       FR-05  b < 0, x integer computed with sign tracking
+
+    NFR-02: a result outside the representable range is reported as a
+    RangeError rather than returned as inf or silently flushed to zero.
     """
     # FR-03: zero base.
     if b == 0.0:
@@ -33,6 +38,11 @@ def compute_f5(a, b, x):
         raise DomainError(
             "Zero raised to a non-positive exponent is undefined.",
             "choose x > 0 when b = 0.")
+
+    # A zero multiplier makes the result zero whatever b and x are, and
+    # returning here avoids forming 0 * inf (which is NaN) further down.
+    if a == 0.0:
+        return 0.0
 
     # FR-04: negative base with a non-integer exponent has no real value.
     if b < 0.0 and x != floor_int(x):
@@ -63,4 +73,18 @@ def compute_f5(a, b, x):
     else:
         q = 1.0
 
-    return a * p * q
+    result = a * p * q
+
+    # NFR-02: report a result that left the representable range instead of
+    # handing back inf or 0.0. Without this the interface would display
+    # "f(x) = inf", which states no cause and offers no corrective action.
+    if result != result or result == _INF or result == -_INF:
+        raise RangeError(
+            "The result is too large to represent (overflow).",
+            "reduce the magnitude of a, b, or x.")
+    if result == 0.0:
+        raise RangeError(
+            "The result is too small to represent (underflow).",
+            "increase the magnitude of a, b, or x.")
+
+    return result
