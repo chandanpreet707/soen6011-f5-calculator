@@ -10,15 +10,18 @@ which the project description permits.
 Build order (one commit per function):
     1. absolute, floor_int
     2. pow_int
-    3. ln
-    4. exp                  <- this commit
+    3. ln (with range reduction)
+    4. exp (with the cancellation fix for negative arguments)
 """
 
 from f5_errors import ConvergenceError, DomainError
 
-EPSILON = 1e-12   # series stopping tolerance; supports NFR-01
-                  # (at least 6 significant digits, with margin)
-MAX_ITER = 10000  # safety cap so a series can never loop forever
+# Series stopping tolerance. Supports NFR-01 (at least 6 significant
+# digits) with a wide margin.
+EPSILON = 1e-12
+
+# Safety cap so that a series can never loop forever.
+MAX_ITER = 10000
 
 
 def absolute(y):
@@ -114,7 +117,6 @@ def ln(b, eps=EPSILON, max_iter=MAX_ITER):
     return _ln_series(m, eps, max_iter) + p * _LN2
 
 
-
 def exp(y, eps=EPSILON, max_iter=MAX_ITER):
     """Exponential of y via the Maclaurin series 1 + y + y^2/2! + ...
 
@@ -144,4 +146,7 @@ def exp(y, eps=EPSILON, max_iter=MAX_ITER):
     return total
 
 
-_LN2 = _ln_series(2.0, EPSILON, MAX_ITER)  # computed once, from scratch
+# ln(2), computed once at import by the same series, so no constant is
+# copied from a table. At m = 2 the ratio t = 1/3 sits exactly on the
+# boundary of the [1, 2) range above, which still converges quickly.
+_LN2 = _ln_series(2.0, EPSILON, MAX_ITER)
