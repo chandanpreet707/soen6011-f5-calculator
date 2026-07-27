@@ -10,9 +10,13 @@ than opaque failures.
 
 Hierarchy:
     F5Error                 base for every calculator-specific error
+      InputError            an entry could not be read as a finite real
       DomainError           input outside the real domain of a*b**x
       ConvergenceError      a series exceeded its iteration limit
       RangeError            result too large or small to represent
+
+F5Error is never raised directly; it exists so that one except clause can
+catch every calculator error.
 
 Catching F5Error handles any calculator error at once; catching a
 specific subclass handles one kind with a tailored response.
@@ -34,6 +38,16 @@ class F5Error(Exception):
         else:
             message = cause
         super().__init__(message)
+
+
+class InputError(F5Error):
+    """Raised when an entry field cannot be read as a finite real number.
+
+    Covers an empty field (FR-08), text that is not a decimal number
+    (FR-07), and a value that parses but is not finite, such as "nan" or
+    "inf" (FR-09). Separated from DomainError because the value never
+    reached the mathematics: nothing was computed.
+    """
 
 
 class DomainError(F5Error):
