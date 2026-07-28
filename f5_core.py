@@ -16,7 +16,58 @@ fractional part, where it converges quickly.
 from f5_math import absolute, floor_int, pow_int, ln, exp
 from f5_errors import DomainError, RangeError
 
-_INF = float("inf")
+# The overflow sentinel, formed by arithmetic rather than by float("inf").
+# float() is a built-in type conversion; DC-03 permits only input, output,
+# arithmetic and interface functions, and multiplying two finite numbers
+# past the representable range yields the infinity we need.
+_INF = 1e308 * 10.0
+
+
+_FACTOR_COUNT = 4
+
+
+def _balanced_product(f0, f1, f2, f3):
+    """Multiply four factors in an order that keeps the product near 1.
+
+    Multiplication is associative in mathematics but not in floating
+    point: a product whose value is representable can still be reached
+    through an intermediate value that is not. With a = 1e-300,
+    b = 1e300 and x = 2 the answer 1e300 is an ordinary double, yet
+    computing b**2 first gives 1e600, which overflows, and multiplying
+    by a afterwards cannot recover it. Reaching an extreme and coming
+    back also costs accuracy: an intermediate value in the subnormal
+    range keeps only two or three significant digits, which is how
+    Python's own ** loses fifteen percent on
+    a = 6.7e248, b = -6.73, x = -390.
+
+    The rule below avoids both. While the running product is above 1,
+    multiply by the smallest factor left; while it is at or below 1,
+    multiply by the largest. Opposing factors then cancel as they are
+    applied, and the running product stays as close to 1 as the four
+    factors allow.
+    """
+    factors = [f0, f1, f2, f3]
+    used = [False, False, False, False]
+    result = 1.0
+    step = 0
+    while step < _FACTOR_COUNT:
+        want_smallest = absolute(result) > 1.0
+        best = -1
+        i = 0
+        while i < _FACTOR_COUNT:
+            if not used[i]:
+                if best < 0:
+                    best = i
+                elif want_smallest:
+                    if absolute(factors[i]) < absolute(factors[best]):
+                        best = i
+                elif absolute(factors[i]) > absolute(factors[best]):
+                    best = i
+            i += 1
+        result = result * factors[best]
+        used[best] = True
+        step += 1
+    return result
 
 
 def compute_f5(a, b, x):
@@ -28,10 +79,14 @@ def compute_f5(a, b, x):
       FR-04  b < 0, x not int rejected (no real value)
       FR-05  b < 0, x integer computed with sign tracking
 
+    NFR-01: accurate to at least six significant digits for results
+    inside the normal representable range.
+
     NFR-02: a result outside the representable range is reported as a
     RangeError rather than returned as inf or silently flushed to zero.
     """
-    # FR-03: zero base.
+    # FR-03: zero base. Checked first because the sign and domain rules
+    # below all assume a non-zero base.
     if b == 0.0:
         if x > 0:
             return 0.0
@@ -57,18 +112,29 @@ def compute_f5(a, b, x):
     n = floor_int(x)
     f = x - n
 
-    # Integer part, computed exactly on the magnitude of b.
-    p = pow_int(absolute(b), absolute(n))
+    # Integer part, computed exactly on the magnitude of b, but in two
+    # halves so that a can be folded in between them.
+    #
+    # Computing the whole of |b|**n first, and only then multiplying by a,
+    # can leave the representable range on the way to a result that is
+    # inside it: a = 1e-300, b = 1e300, x = 2 has the representable answer
+    # 1e300, yet |b|**2 = 1e600 overflows before a is ever applied.
+    #
+    # Each half carries at most half the exponent, and a is itself a finite
+    # double, so it can compensate at most about 308 decades. Any product
+    # a * b**n that is representable therefore has both halves and both
+    # partial products representable too.
+    magnitude = absolute(n)
+    half = floor_int(magnitude / 2.0)
+    p1 = pow_int(absolute(b), half)
+    p2 = pow_int(absolute(b), magnitude - half)
     if n < 0:
-        if p == 0.0:
+        if p1 == 0.0 or p2 == 0.0:
             raise RangeError(
                 "The result is too large to represent (overflow).",
                 "reduce the magnitude of x or b.")
-        p = 1.0 / p
-
-    # FR-05: restore the sign for a negative base with an odd exponent.
-    if b < 0.0 and n % 2 != 0:
-        p = -p
+        p1 = 1.0 / p1
+        p2 = 1.0 / p2
 
     # Fractional part, via the series, only when there is one.
     if f > 0.0:
@@ -76,7 +142,13 @@ def compute_f5(a, b, x):
     else:
         q = 1.0
 
-    result = a * p * q
+    # The answer is the product a * p1 * p2 * q, but the ORDER matters:
+    # see _balanced_product.
+    result = _balanced_product(a, p1, p2, q)
+
+    # FR-05: restore the sign for a negative base with an odd exponent.
+    if b < 0.0 and n % 2 != 0:
+        result = -result
 
     # NFR-02: report a result that left the representable range instead of
     # handing back inf or 0.0. Without this the interface would display

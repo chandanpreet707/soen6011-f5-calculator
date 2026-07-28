@@ -20,7 +20,10 @@ from f5_core import compute_f5
 from f5_errors import F5Error, InputError
 
 
-_INF = float("inf")
+# The infinity sentinel, formed by arithmetic rather than by float("inf"),
+# so that the only built-in conversion in the program is the float() call
+# that reads user input, which DC-03 permits as an input function.
+_INF = 1e308 * 10.0
 
 
 def parse_real(text, name):
