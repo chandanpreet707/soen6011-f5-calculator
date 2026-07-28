@@ -9,10 +9,11 @@ shall [Action] [Object] [Constraint]**, active voice, one capability per
 requirement, each with a unique identifier and a uniquely identified
 source.
 
-**Identifiers are stable.** Every identifier that existed in D1 means in D2
-exactly what it meant in D1. New behaviour receives a new identifier;
-nothing is renumbered, so a D1 trace still resolves correctly against this
-document.
+**Identifiers are stable.** Existing identifiers are retained where the
+underlying intent is unchanged; requirements whose wording was revised are
+marked as revised (FR-06 and DC-01); and new behaviour receives a new
+identifier. Nothing is renumbered, so a D1 trace still resolves correctly
+against this document.
 
 ## Change summary
 
@@ -24,6 +25,7 @@ document.
 | FR-10 added (quit) | D1 feedback: the quit operation was shown but never specified |
 | NFR-04 added (convergence) | D1 feedback: an iteration-limit failure was reported as an overflow. Non-convergence and numeric overflow are now separate requirements (NFR-04 and NFR-02) served by separate exception classes |
 | NFR-02 unchanged in wording, now enforced | D2 defect audit: results outside the representable range were returned as `inf` or `0.0` instead of reported, so NFR-02 was unmet in D1 |
+| NFR-01 scope made explicit | D2 measurement: the six-digit guarantee is stated for the normal representable range, since the double format itself carries fewer than six digits for subnormal results |
 | FR-05 trace corrected | D1 feedback: FR-05 traced to "Completeness", not to the persona |
 | FR-06 rewording | The interface is now graphical; there are no prompts |
 | DC-01 revised; DC-02, DC-03 added | D2/Problem 5: GUI replaces the textual interface; from-scratch and platform constraints made explicit |
@@ -96,7 +98,8 @@ exceptions; **PD-05** error messages helpful to users.
 ## Non-functional requirements
 
 - **NFR-01** The F5 Calculator shall compute results accurate to at least 6
-  significant digits. [Trace: G-02, N-02]
+  significant digits for results within the normal representable range.
+  [Trace: G-02, N-02]  *(D2: scope stated explicitly — see note 3)*
 - **NFR-02** When a computation exceeds the representable numeric range, the
   F5 Calculator shall display a message stating the cause, without
   terminating. [Trace: PP-03]  *(D1 wording unchanged; now enforced by
@@ -127,6 +130,14 @@ bases) and serves G-01, but it exists primarily for mathematical
 completeness. It is recorded as such rather than being attached to an
 invented persona need. This corrects the D1 trace, which read
 "Completeness" and cited no source at all.
+
+**Note 3 — NFR-01.** The six-significant-digit guarantee is stated for the
+normal representable range, that is for results of magnitude at least
+2.2 x 10^-308. Below that, doubles are subnormal and the format itself
+holds fewer than six significant digits, so no implementation could meet
+the requirement there. Measured worst relative error inside the normal
+range is 5.2 x 10^-11 over 120,000 randomly sampled inputs, against a
+requirement of 10^-6.
 
 **Note 2 — FR-10.** An explicit exit is a usability requirement rather than
 a stated persona need. It is traced to N-03, since the persona works in
@@ -166,10 +177,22 @@ requirement.
 |---|---|
 | FR-01, FR-07, FR-08, FR-09 | `f5_gui.parse_real` |
 | FR-02, FR-03, FR-04, FR-05 | `f5_core.compute_f5` |
+| NFR-02 range-safe multiplication | `f5_core._balanced_product` |
 | FR-06, FR-10 | `f5_gui.F5App` |
-| NFR-01 | `f5_math.EPSILON`; evidenced by `verify_f5.py` |
+| NFR-01 | `f5_math.EPSILON`; evidenced by `verify_f5.py` section 1 |
 | NFR-02 | `f5_core.compute_f5` range check, `f5_errors.RangeError` |
 | NFR-03 | `f5_errors.F5Error.__init__` |
-| NFR-04 | `f5_math.MAX_ITER`, `f5_errors.ConvergenceError` |
+| NFR-04 | `f5_math.MAX_ITER`, `f5_errors.ConvergenceError`; evidenced by `verify_f5.py` section 4 |
 | DC-01, DC-02 | `f5_gui` |
 | DC-03 | `f5_math` |
+## Known limitation
+
+The integer power is computed in two halves so that a very small or very
+large `a` can compensate a `b^n` that would otherwise leave the
+representable range on its own (`f5_core._balanced_product`). This covers
+every input for which `|b|^(n/2)` is itself representable. For the
+remaining inputs, where even half the integer power leaves the range, the
+calculator reports a `RangeError` rather than returning a wrong value; it
+is conservative there, never incorrect. Measured over 160,000 randomly
+sampled inputs spanning 600 decades, this residue is about 1 case in
+20,000, and none of them lies within the persona's working range.

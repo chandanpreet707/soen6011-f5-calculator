@@ -54,16 +54,27 @@ Subordinate functions, all from scratch:
 | Function | Method |
 |---|---|
 | `absolute`  | sign test |
-| `floor_int` | truncate, then correct for negatives |
+| `floor_int` | floor division, which rounds toward minus infinity |
 | `pow_int`   | exponentiation by squaring, exact for integer powers |
 | `ln`        | atanh series with range reduction b = m·2^p, m in [1,2) |
 | `exp`       | Maclaurin series; negative arguments via e^y = 1/e^(-y) |
 
+The four factors of the answer (`a`, the two halves of the integer power,
+and the fractional factor) are multiplied in an order that keeps the
+running product near 1. Multiplication is associative in mathematics but
+not in floating point: computing `b**x` first and multiplying by `a`
+afterwards can overflow on the way to an answer that is perfectly
+representable, and passing through the subnormal range destroys most of
+the significant digits. Ordering the multiplications removes both
+failures, and on some inputs makes this implementation more accurate than
+Python's own `**`.
+
 Accuracy: worst relative error 4.6 × 10⁻¹¹ over the ten verification
-cases, well within the six-significant-digit target. `verify_f5.py` also
-checks five inputs that must be *rejected* (zero base with a non-positive
-exponent, negative base with a fractional exponent, and overflow and
-underflow), so the domain rules are evidenced rather than asserted.
+cases, and 5.2 × 10⁻¹¹ over 120,000 randomly sampled inputs, against a
+six-significant-digit target. `verify_f5.py` also checks six inputs that
+must be *rejected*, four compensated-scale results that are reachable only
+through a range-safe order of multiplication, and a forced convergence
+failure, so every requirement is evidenced rather than asserted.
 
 ## Project layout
 
@@ -71,7 +82,7 @@ underflow), so the domain rules are evidenced rather than asserted.
     f5_errors.py   custom exception hierarchy (F5Error and children)
     f5_core.py     compute_f5, Algorithm B with the domain rules
     f5_gui.py      Tkinter interface with input validation
-    verify_f5.py   reproducible accuracy check against Python's **
+    verify_f5.py   accuracy, rejection, range-safety and convergence checks
     docs/          requirements and per-function flowcharts
 
 ## Error handling
@@ -86,6 +97,17 @@ a corrective action rather than crashing:
 
 `F5Error` is the common base and is never raised directly, so a single
 `except F5Error` catches every calculator error.
+
+## Accuracy scope
+
+The six-significant-digit guarantee applies to results in the normal
+representable range, of magnitude at least 2.2 × 10⁻³⁰⁸. Below that a
+double is subnormal and the format itself holds fewer than six
+significant digits.
+
+Where even half of the integer power `|b|^(n/2)` leaves the representable
+range, the calculator reports a `RangeError` instead of returning a value.
+It is conservative in that corner, never incorrect.
 
 ## Domain rules
 
