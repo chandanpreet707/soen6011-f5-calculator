@@ -67,7 +67,8 @@ afterwards can overflow on the way to an answer that is perfectly
 representable, and passing through the subnormal range destroys most of
 the significant digits. Ordering the multiplications removes both
 failures, and on some inputs makes this implementation more accurate than
-Python's own `**`.
+the expression `a * b**x`, which loses the digits in the intermediate
+before `a` is ever applied.
 
 Accuracy: worst relative error 4.6 × 10⁻¹¹ over the ten verification
 cases, and 5.2 × 10⁻¹¹ over 120,000 randomly sampled inputs, against a

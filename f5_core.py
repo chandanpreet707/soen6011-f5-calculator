@@ -36,9 +36,13 @@ def _balanced_product(f0, f1, f2, f3):
     computing b**2 first gives 1e600, which overflows, and multiplying
     by a afterwards cannot recover it. Reaching an extreme and coming
     back also costs accuracy: an intermediate value in the subnormal
-    range keeps only two or three significant digits, which is how
-    Python's own ** loses fifteen percent on
-    a = 6.7e248, b = -6.73, x = -390.
+    range keeps only two or three significant digits. On
+    a = 6.7e248, b = -6.73, x = -390 the answer is an ordinary
+    7.85e-75, but b**x alone is 1.17e-323, barely two steps above the
+    smallest double, so the expression a * b**x loses fifteen percent
+    before a is applied. The built-in operator is not at fault: it
+    returns the correctly rounded value of what it was asked. This
+    ordering never forms that intermediate.
 
     The rule below avoids both. While the running product is above 1,
     multiply by the smallest factor left; while it is at or below 1,

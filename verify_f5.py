@@ -140,9 +140,11 @@ def scale_section():
     print("  the double format itself holds fewer than six significant digits.")
     print("  NFR-01 is scoped to the normal range for this reason.")
 
-    # A case where this implementation is MORE accurate than the built-in
-    # operator, because ** passes through a subnormal intermediate value
-    # and the balanced product does not.
+    # A case where this implementation is MORE accurate than the
+    # expression a * b**x. The built-in operator is correctly rounded;
+    # the loss happens because b**x alone is subnormal, so the digits are
+    # gone before a is applied. The balanced product never forms that
+    # intermediate.
     a, b, x = 6.737065165365105e248, -6.730304257494641, -390
     reference = exact(a, b, x)
     ours = compute_f5(a, b, x)
