@@ -34,19 +34,24 @@ def absolute(y):
 
 
 def floor_int(y):
-    """Return the greatest integer n with n <= y, as an int.
+    """Return the greatest whole number n with n <= y.
 
     Needed by Algorithm B to split the exponent x = n + f into its
     integer part n and fractional part f in [0, 1).
 
-    int(y) truncates toward zero, which differs from floor for
-    negative non-integers (int(-2.5) == -2 but floor(-2.5) == -3),
-    so that case is corrected explicitly.
+    D2 revision: the first version called int(y), which truncates
+    toward zero and therefore had to correct the negative case by hand
+    (int(-2.5) == -2 but floor(-2.5) == -3). int() is a built-in type
+    conversion, and DC-03 permits only input, output, arithmetic and
+    interface functions, so it is replaced by the arithmetic floor
+    division operator, which rounds toward minus infinity for free.
+
+    The result is a whole-valued float rather than an int. Every use
+    of it -- the comparison x != floor_int(x), the subtraction x - n,
+    the parity test n % 2, and the halving inside pow_int -- is
+    arithmetic that behaves identically on a whole-valued float.
     """
-    n = int(y)              # truncation toward zero (type conversion)
-    if y < 0 and y != n:    # negative and not already a whole number
-        n -= 1
-    return n
+    return y // 1.0
 
 
 def pow_int(b, n):
@@ -62,6 +67,10 @@ def pow_int(b, n):
 
     The integer part of the exponent is computed EXACTLY this way,
     which is the reason Algorithm B splits x = n + f (D1/Problem 3).
+
+    n may be an int or a whole-valued float (what floor_int now
+    returns). Only %, // and comparison are applied to it, and those
+    behave identically on both, so no conversion is needed.
     """
     result = 1.0
     while n > 0:
