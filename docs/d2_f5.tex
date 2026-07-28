@@ -5,22 +5,8 @@
 % screenshot1.png, screenshot2.png, screenshot3.png must sit in the same
 % folder as this .tex file.
 %
-% MAIN TRACK: 13 slides (title + 12), target under 6 minutes.
+% MAIN TRACK: 10 slides (title + 9), target under 6 minutes.
 % Everything after \appendix is APPENDIX material, shown on request.
-%
-% -----------------------------------------------------------------
-% ACTION LIST BEFORE SUBMITTING - do not leave any of these unchecked
-% -----------------------------------------------------------------
-% [ ] A1. Confirm the repository URL below is exact and public.
-% [ ] A2. Confirm f5_gui.py actually rejects "inf", "-inf" and "nan".
-%         Python's float() ACCEPTS these strings, so a plain float()
-%         call will let them through. FR-08 claims they are rejected.
-%         If the code does not reject them, fix the code, not the slide.
-% [ ] A3. Confirm f5_gui.py rejects an empty entry field (FR-07).
-% [ ] A4. Re-run verify_f5.py and confirm the worst relative error is
-%         still 4.6e-11 and that the table on the backup slide matches.
-% [ ] A5. Check the footer slide count reads 13 on the main track.
-% -----------------------------------------------------------------
 
 \documentclass[11pt]{beamer}
 \usetheme{Madrid}
@@ -38,30 +24,6 @@
 
 \begin{frame}
   \titlepage
-\end{frame}
-
-% ===============================================================
-\begin{frame}{Response to D1 Feedback}
-  \textbf{What the D1 evaluation said:} the demonstration ran too long and
-  the answers were not short enough.
-  \medskip
-
-  \textbf{What I changed for D2:}
-  \begin{itemize}
-    \item Main track is 13 slides. Everything else is in the appendix.
-    \item The demonstration is scripted and rehearsed: five cases, ninety seconds.
-    \item Every number on a slide comes from a measurement I can show.
-  \end{itemize}
-  \medskip
-
-  \textbf{What the marker asked for, and where it is answered:}
-  \begin{itemize}
-    \item Running out of iterations is no longer called an overflow
-          (Exception Handling slide).
-    \item Every requirement now traces to a uniquely identified persona
-          element (Problem 7 slides; full list in the appendix).
-    \item Malformed input and quitting are now requirements (FR-07, FR-08, FR-10).
-  \end{itemize}
 \end{frame}
 
 % ===============================================================
@@ -84,12 +46,16 @@
     Function & How it works & What it is for \\
     \midrule
     \texttt{absolute}   & sign test                & tolerance checks; sign of $b$ \\
-    \texttt{floor\_int} & truncate, then correct   & split $x = n + f$, $f \in [0,1)$ \\
+    \texttt{floor\_int} & floor division           & split $x = n + f$, $f \in [0,1)$ \\
     \texttt{pow\_int}   & repeated squaring        & exact $|b|^{n}$ in $O(\log n)$ steps \\
     \texttt{ln}         & series + range reduction & $\ln|b|$ for the fractional part \\
     \texttt{exp}        & Maclaurin series         & $e^{f \ln|b|}$ \\
     \bottomrule
   \end{tabular}
+  \medskip
+
+  \footnotesize The only built-in conversion left anywhere in the calculator is
+  the \texttt{float()} that reads a text entry, which is an input function.
 \end{frame}
 
 \begin{frame}{Problem 5: Module Architecture}
@@ -116,52 +82,43 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Problem 5: Improvement 1 --- Range Reduction in \texttt{ln}}
-  \textbf{The D1 problem:} for a very large or very small base, the logarithm
-  series needed thousands of terms and hit the iteration cap, so valid inputs
-  were rejected.
-  \medskip
+\begin{frame}{Problem 5: Four Measured Improvements over D1}
+  \footnotesize
+  \textbf{1. Range reduction in $\ln$.} Write $b = m \cdot 2^{p}$ with
+  $m \in [1,2)$, so $\ln b = \ln m + p \ln 2$ and the series only ever sees a
+  small number. D1 rejected bases beyond about $10^{5}$; D2 handles
+  $10^{\pm 15}$ in 11 terms or fewer.
+  \smallskip
 
-  \textbf{The fix:} write $b = m \cdot 2^{p}$ with $m$ between 1 and 2. Then
-  $\ln b = \ln m + p \ln 2$. The series only ever sees the small number $m$,
-  so it always converges quickly.
-  \begin{center}
-  \begin{tabular}{rrr}
+  \textbf{2. Cancellation in $\exp$.} For $y < 0$ the raw series adds and
+  subtracts large nearly-equal terms. D2 computes $e^{y} = 1/e^{-y}$ instead.
+  \smallskip
+
+  \textbf{3. Rounding down, not toward zero.} \texttt{floor\_int} uses floor
+  division, which keeps $f \in [0,1)$ for negative exponents and removes the
+  last built-in conversion from the mathematics.
+  \smallskip
+
+  \textbf{4. Range-safe order of multiplication.} The answer is
+  $a \cdot p_1 \cdot p_2 \cdot q$; the \emph{order} decides whether it can be
+  reached. See the table.
+  \smallskip
+
+  \centering
+  \begin{tabular}{lrr}
     \toprule
-    base $b$ & terms needed in D1 & terms needed in D2 \\
+    Case & D1 & D2 \\
     \midrule
-    $1.4$      & 7           & 7  \\
-    $10$       & 57          & 6  \\
-    $10^{6}$   & fails (cap) & 11 \\
-    $10^{15}$  & fails (cap) & 10 \\
-    $10^{-15}$ & fails (cap) & 4  \\
+    $\ln$ terms at $b = 10^{15}$              & fails (cap)          & 10 \\
+    $\exp$ relative error at $y = -30$        & $6\times10^{7}$      & $3\times10^{-16}$ \\
+    $a=10^{-300},\, b=10^{300},\, x=2$        & overflow             & $10^{300}$ \\
+    $a=6.7\!\times\!10^{248},b=-6.73,x=-390$  & overflow             & $3.6\times10^{-15}$ \\
     \bottomrule
   \end{tabular}
-  \end{center}
-  D1 gave up on bases beyond about $10^{5}$. D2 handles them in 11 terms or fewer.
-\end{frame}
+  \smallskip
 
-\begin{frame}{Problem 5: Improvements 2 and 3}
-  \textbf{2. Cancellation in \texttt{exp}.} For a negative $y$ the series adds
-  and subtracts very large numbers that almost cancel, so the digits that
-  survive are meaningless. D2 computes $e^{y} = 1/e^{-y}$ instead, so every
-  term added is positive.
-  \begin{center}
-  \begin{tabular}{rrr}
-    \toprule
-    argument $y$ & D1 relative error & D2 relative error \\
-    \midrule
-    $-5$  & $1\times10^{-11}$ & $6\times10^{-16}$ \\
-    $-20$ & $2.0$             & $4\times10^{-16}$ \\
-    $-30$ & $6\times10^{7}$   & $3\times10^{-16}$ \\
-    $-40$ & $7\times10^{16}$  & $4\times10^{-16}$ \\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-  \textbf{3. Rounding down instead of toward zero.} Python's \texttt{int()}
-  rounds toward zero, so $x = -2.5$ split incorrectly. \texttt{floor\_int}
-  rounds down, which keeps the fractional part $f$ inside $[0,1)$ for
-  negative exponents too.
+  \raggedright On the last row Python's own \texttt{**} is $15\%$ wrong, because it
+  passes through the subnormal range and this implementation does not.
 \end{frame}
 
 \begin{frame}{Problem 5: Exception Handling Design}
@@ -184,11 +141,12 @@
           failures with different fixes. They are now separate:
           \texttt{ConvergenceError} versus \texttt{RangeError}.
     \item Every message says what went wrong \emph{and} what to do next (NFR-03).
-
-    \item \textbf{A second defect this exposed.} D1 returned \texttt{inf}
-          when a result left the representable range, so the interface showed
-          ``f(x) = inf'': no cause, no corrective action, against NFR-02.
-          D2 raises \texttt{RangeError} for overflow and underflow alike.
+    \item \textbf{Two defects this design exposed, both now fixed.} D1 returned
+          \texttt{inf} when a result left the representable range, so the
+          interface showed ``f(x) = inf'': no cause, no corrective action,
+          against NFR-02. And a zero multiplier short-circuited the domain
+          rules, so $a = 0,\, b = -2,\, x = 0.5$ returned $0$ instead of being
+          rejected under FR-04.
   \end{itemize}
 \end{frame}
 
@@ -206,25 +164,12 @@
   \medskip
   \begin{itemize}
     \item Labelled fields for $a$, $b$ and $x$; Compute, Clear and Quit buttons;
-          a result area.
+          a result area; the valid domain stated before an error can occur.
     \item Input is checked before any computation runs, and an error is shown
           without closing the window. The persona's complaint was tools that
           simply die on overflow.
     \item New values can be entered straight away, with no restart (FR-06).
   \end{itemize}
-\end{frame}
-
-\begin{frame}{Problem 5: Demonstration Plan (ninety seconds)}
-  \begin{enumerate}
-    \item Normal growth case: $a = 100$, $b = 1.4$, $x = 3.5$ (the persona's scenario).
-    \item Extreme base now accepted: $b = 10^{15}$ (this failed in D1).
-    \item Negative base with a whole-number exponent: $a = 1$, $b = -2$, $x = 3$.
-    \item Rejected input with a corrective message: $b = -2$, $x = 0.5$.
-    \item Quit.
-  \end{enumerate}
-  \medskip
-  Each case is there to show one requirement working: FR-02, the range
-  reduction, FR-05, FR-04 with NFR-03, and FR-10.
 \end{frame}
 
 % ===============================================================
@@ -245,12 +190,13 @@
               \texttt{docs/flowcharts/}, the updated requirements in
               \texttt{docs/}, and a README with the module map and run
               instructions that need no installation.
+        \item The full history is in the repository; one representative message
+              is enlarged here.
       \end{itemize}
     \column{0.45\textwidth}
       \begin{center}
-      % Crop to the two expanded commit bodies. Bounded on both axes so the
-      % slide cannot overflow whatever crop ratio is used.
-      \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{screenshot3.png}
+      % One commit subject and body, cropped and enlarged for legibility.
+      \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{screenshot3.png}
       \end{center}
   \end{columns}
 \end{frame}
@@ -258,78 +204,88 @@
 % ===============================================================
 % PROBLEM 7 (20 marks): updated requirements
 % ===============================================================
-\begin{frame}{Problem 7: How the Requirements Were Updated}
-  \begin{itemize}
-    \item The style is unchanged from D1: the ISO/IEC/IEEE 29148 construct
-          [Condition] [Subject] shall [Action] [Object] [Constraint].
-    \item Two things drove the update:
-    \begin{itemize}
-      \item \textbf{The D2 design.} The interface is now a GUI, and the
-            from-scratch and exception rules are now stated as constraints.
-      \item \textbf{A gap analysis of D1.} Behaviour that existed in the code
-            but had no requirement covering it.
-    \end{itemize}
-    \item \textbf{Fixing the D1 trace problem.} In D1 the traces were phrases
-          such as ``Goals'' and ``Pain Point 1''. Every persona element now
-          has a unique identifier (\texttt{G-01}, \texttt{N-03}, \texttt{PP-01},
-          and so on), and every requirement cites those identifiers.
-          \texttt{FR-05} traced to ``Completeness'' in D1; it now traces to
-          \texttt{PP-01} and \texttt{G-01}.
-    \item The identifiers on these slides are the same ones written into the
-          source-code docstrings, so the code and the requirements cannot drift
-          apart.
-    \item The complete updated list and the traceability matrix are appendix slides.
-  \end{itemize}
+\begin{frame}{Problem 7: Updated Requirements}
+  \scriptsize
+  \begin{columns}[T]
+    \column{0.46\textwidth}
+      \textbf{How the list was updated.} Style unchanged from D1: the
+      ISO/IEC/IEEE 29148 construct [Condition] [Subject] shall [Action]
+      [Object] [Constraint]. Two drivers: the D2 design, and a gap analysis
+      of D1.
+      \smallskip
+
+      \textbf{The D1 trace problem, fixed.} Traces were phrases such as
+      ``Goals'' and ``Pain Point 1''. Every \emph{identified source} now has a
+      unique identifier: \texttt{G-}, \texttt{N-}, \texttt{PP-},
+      \texttt{PL-} for the persona and \texttt{PD-} for the project
+      description, since two design constraints come from the project
+      description rather than from the persona.
+      \smallskip
+
+      \textbf{Identifier stability.} Existing identifiers are kept where the
+      intent is unchanged, revised requirements are marked as revised
+      (FR-06, DC-01), and new behaviour gets a new identifier. Nothing is
+      renumbered.
+      \smallskip
+
+      Full list and two-way traceability: appendix.
+    \column{0.52\textwidth}
+      \textbf{What changed.}
+      \begin{itemize}
+        \item \textbf{FR-07} (new) reject an entry that is not a decimal number.
+        \item \textbf{FR-08} (new) reject an empty entry field.
+        \item \textbf{FR-09} (new) reject an infinite or not-a-number entry.
+        \item \textbf{FR-10} (new) Quit closes the window and ends the session.
+        \item \textbf{NFR-04} (new) report a convergence failure without
+              terminating.
+        \item \textbf{DC-02, DC-03} (new) standard Python installation; no
+              built-in or library function beyond input, output, arithmetic
+              and interface design.
+        \item \textbf{FR-05} trace corrected: was ``Completeness'', now
+              \texttt{PP-01}, \texttt{G-01}.
+        \item \textbf{FR-06} revised: ``prompt'' has no meaning in a GUI.
+        \item \textbf{DC-01} revised: Tkinter GUI replaces the textual interface.
+        \item \textbf{NFR-01} scope stated: six digits within the normal
+              representable range.
+        \item \textbf{NFR-02} wording unchanged, but now actually enforced.
+      \end{itemize}
+  \end{columns}
 \end{frame}
 
-\begin{frame}{Problem 7: What Changed}
-  \scriptsize
+\begin{frame}{Generative AI Usage (Problems 5, 6 and 7)}
+  \footnotesize
   \begin{itemize}
-    \item \textbf{FR-07 (new).} When an entry is not a number in decimal
-          notation, the F5 Calculator shall reject the input and display the
-          cause and a corrective action.
-          [\texttt{G-03}, \texttt{PP-02}, \texttt{N-04}]
-    \item \textbf{FR-08 (new).} When an entry field is empty, the F5
-          Calculator shall reject the input and display the cause and a
-          corrective action. [\texttt{G-03}, \texttt{N-01}]
-    \item \textbf{FR-09 (new).} When an entry is an infinite or
-          not-a-number value, the F5 Calculator shall reject the input and
-          display the cause and a corrective action.
-          [\texttt{G-03}, \texttt{PP-03}]
-    \item \textbf{FR-10 (new).} When the user activates the Quit control, the
-          F5 Calculator shall close the application window and end the session.
-          [\texttt{N-03}; demonstrated in D1, previously untraced]
-    \item \textbf{NFR-04 (new).} When a series fails to converge within its
-          iteration limit, the F5 Calculator shall report a convergence error
-          without terminating. [\texttt{PP-03}, \texttt{PD-04}]
-    \item \textbf{FR-05 (trace corrected).} Was ``Completeness''; now
-          [\texttt{PP-01}, \texttt{G-01}].
-    \item \textbf{NFR-02 (unchanged wording, now enforced).} A result outside
-          the representable range is reported instead of returned as
-          \texttt{inf} or zero. [\texttt{PP-03}]
-    \item \textbf{DC-01 (revised).} Graphical user interface using Tkinter
-          [was: textual interface]. [\texttt{PD-02}]
-    \item \textbf{DC-02 (new).} Runs on a standard Python installation, with no
-          administrator rights, IDE, or third-party package.
-          [\texttt{PL-01}, \texttt{PD-03}]
-    \item \textbf{DC-03 (new).} Uses no built-in or library function beyond
-          input, output, arithmetic and interface design. [\texttt{PD-01}]
-    \item FR-01--FR-06, NFR-01--NFR-03 and A1--A5 keep their D1 identifiers
-          unchanged. New behaviour gets new identifiers; nothing is renumbered,
-          so a D1 identifier still means the same thing in D2.
+    \item Tool: Claude (Anthropic), a publicly available LLM assistant, used
+          for all three problems. Prompts follow CASTROFF: Constraints,
+          Audience, Structure, Tone, Role, Output format, Focus, Function.
+    \item \textbf{Example prompt (Problem 5).} ``Acting as a numerical software
+          engineer [Role], implement a natural logarithm from scratch in
+          Python [Focus] without any library functions [Constraints], using
+          the atanh series with range reduction so that extreme bases converge
+          quickly [Function], with docstrings explaining the mathematics for a
+          graduate evaluator [Audience, Tone], as a single module
+          [Structure, Output format].''
+    \item \textbf{Accepted:} the range-reduction structure; the commit-message
+          format; the source-identifier scheme.
+    \item \textbf{Corrected:} $\ln 2$ is computed by the series rather than
+          tabulated; the FR-05 trace was fixed by hand.
+    \item \textbf{Rejected:} the first \texttt{exp}, once testing exposed
+          catastrophic cancellation for negative arguments.
+    \item Nothing was accepted until it had been checked against a reference.
+          Full prompts for Problems 6 and 7 are in the appendix.
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Summary}
   \begin{itemize}
     \item \textbf{Problem 5:} the function is computed entirely from scratch
-          through five subordinate functions, with three measured improvements
+          through five subordinate functions, with four measured improvements
           over D1, custom exception classes, and a Tkinter interface.
     \item \textbf{Problem 6:} a public repository with one commit per concern,
           a flowchart per function, and a README.
     \item \textbf{Problem 7:} the requirements were updated from the D2 design
           and from a gap analysis of D1, and every requirement now traces to a
-          uniquely identified persona element.
+          uniquely identified source.
   \end{itemize}
 \end{frame}
 
@@ -338,14 +294,52 @@
 % APPENDIX SLIDES: required evidence, shown on request
 % ===============================================================
 
-\begin{frame}{Appendix: Persona Element Identifiers}
+\begin{frame}{Appendix: Response to D1 Feedback}
+  \textbf{What the D1 evaluation said:} the demonstration ran too long and
+  the answers were not short enough.
+  \medskip
+
+  \textbf{What I changed for D2:}
+  \begin{itemize}
+    \item Main track is 10 slides. Everything else is in the appendix.
+    \item The demonstration is narrated live: four cases, ninety seconds.
+    \item Every number on a slide comes from a measurement I can show.
+  \end{itemize}
+  \medskip
+
+  \textbf{What the marker asked for, and where it is answered:}
+  \begin{itemize}
+    \item Running out of iterations is no longer called an overflow
+          (Exception Handling slide).
+    \item Every requirement now traces to a uniquely identified source
+          (Problem 7 slide; full list in this appendix).
+    \item Malformed, empty and non-finite input, and quitting, are now
+          requirements (FR-07, FR-08, FR-09, FR-10).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Appendix: Demonstration Plan (ninety seconds)}
+  \begin{enumerate}
+    \item Normal growth case: $a = 100$, $b = 1.4$, $x = 3.5$ (the persona's scenario).
+    \item Extreme base now accepted: $b = 10^{15}$ (this failed in D1).
+    \item Negative base with a whole-number exponent: $a = 1$, $b = -2$, $x = 3$.
+    \item Rejected input with a corrective message: $b = -2$, $x = 0.5$,
+          then recovery and Quit.
+  \end{enumerate}
+  \medskip
+  Each case shows one requirement working: FR-02, the range reduction, FR-05,
+  and FR-04 with NFR-03 and FR-10.
+\end{frame}
+
+\begin{frame}{Appendix: Trace Source Identifiers}
   \scriptsize
   These identifiers replace the D1 trace phrases. Each one is unique and is
-  cited by at least one requirement.
+  cited by at least one requirement. The persona sources come from
+  D1/Problem 1; the \texttt{PD-} sources come from the project description.
   \begin{center}
   \begin{tabular}{ll}
     \toprule
-    ID & Persona element (\'Elodie Tremblay, D1/Problem 1) \\
+    ID & Identified source \\
     \midrule
     \texttt{PL-01} & Managed Windows laptop; no admin rights; no IDE install \\
     \texttt{G-01} & Evaluate $ab^{x}$ repeatedly for many $(a,b,x)$ in one session \\
@@ -374,7 +368,7 @@
   \begin{itemize}
     \item \textbf{FR-01.} The F5 Calculator shall accept real values of $a$,
           $b$ and $x$ in decimal notation.
-          [\texttt{N-01}, \texttt{G-01}]
+          [\texttt{G-01}, \texttt{N-01}]
     \item \textbf{FR-02.} When $b > 0$, the F5 Calculator shall compute
           $f(x) = ab^{x}$ for any real $x$. [\texttt{G-01}]
     \item \textbf{FR-03.} When $b = 0$ and $x \le 0$, the F5 Calculator shall
@@ -385,33 +379,32 @@
           $x$ for a negative base.
           [\texttt{PP-01}, \texttt{N-04}, \texttt{G-03}]
     \item \textbf{FR-05.} When $b < 0$ and $x$ is an integer, the F5
-          Calculator shall compute $f(x) = ab^{x}$.
-          [\texttt{PP-01}, \texttt{G-01}]
-    \item \textbf{FR-06.} Upon displaying a result, the F5 Calculator shall
-          accept new values of $a$, $b$ and $x$ without requiring a restart.
-          [\texttt{N-03}]  (D1 wording said ``prompt''; there are no prompts
-          in a graphical interface.)
+          Calculator shall compute $f(x) = ab^{x}$ with the correct sign.
+          [\texttt{PP-01}, \texttt{G-01} --- see note 1]
+    \item \textbf{FR-06.} \emph{(revised)} Upon displaying a result, the F5
+          Calculator shall accept new values of $a$, $b$ and $x$ without
+          requiring a restart. [\texttt{N-03}]  (D1 wording said ``prompt'';
+          there are no prompts in a graphical interface.)
+    \item \textbf{FR-07.} \emph{(new)} When an entry is not a number in decimal
+          notation, the F5 Calculator shall reject the input and display the
+          cause and a corrective action.
+          [\texttt{G-03}, \texttt{PP-02}, \texttt{N-04}]
+    \item \textbf{FR-08.} \emph{(new)} When an entry field is empty, the F5
+          Calculator shall reject the input and display the cause and a
+          corrective action. [\texttt{G-03}, \texttt{N-01}]
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Appendix: Full Updated Requirements (2 of 3)}
   \scriptsize
   \begin{itemize}
-    \item \textbf{FR-07.} When an entry is not a number in decimal notation,
-          the F5 Calculator shall reject the input and display the cause and
-          a corrective action.
-          [\texttt{G-03}, \texttt{PP-02}, \texttt{N-04}]
-    \item \textbf{FR-08.} When an entry field is empty, the F5 Calculator
-          shall reject the input and display the cause and a corrective
-          action. [\texttt{G-03}, \texttt{N-01}]
-    \item \textbf{FR-09.} When an entry is an infinite or not-a-number
-          value, the F5 Calculator shall reject the input and display the
-          cause and a corrective action.
+    \item \textbf{FR-09.} \emph{(new)} When an entry is an infinite or
+          not-a-number value, the F5 Calculator shall reject the input and
+          display the cause and a corrective action.
           [\texttt{G-03}, \texttt{PP-03}]
-    \item \textbf{FR-10.} When the user activates the Quit control, the F5
-          Calculator shall close the application window and end the session.
-          [\texttt{N-03}]
-
+    \item \textbf{FR-10.} \emph{(new)} When the user activates the Quit
+          control, the F5 Calculator shall close the application window and
+          end the session. [\texttt{N-03} --- see note 2]
   \end{itemize}
   \medskip
   \textbf{Assumptions (retained from D1).}
@@ -425,45 +418,60 @@
     \item \textbf{A4.} The language of interaction is English.
     \item \textbf{A5.} One user interacts with the calculator at a time.
   \end{itemize}
+  \medskip
+  \textbf{Note 1 (FR-05).} FR-05 makes the function total over its real
+  domain. It is induced by \texttt{PP-01} and serves \texttt{G-01}, but it
+  exists primarily for mathematical completeness, and is recorded as such
+  rather than attached to an invented persona need.
+  \smallskip
+
+  \textbf{Note 2 (FR-10).} An explicit exit is a usability decision taken in
+  D2, not a stated persona need. It is traced to \texttt{N-03} and flagged
+  here so that the weaker link is visible rather than disguised.
 \end{frame}
 
 \begin{frame}{Appendix: Full Updated Requirements (3 of 3)}
   \scriptsize
   \begin{itemize}
-    \item \textbf{NFR-01.} The F5 Calculator shall compute results accurate to
-          at least six significant digits.
-          [\texttt{G-02}, \texttt{N-02}]
+    \item \textbf{NFR-01.} \emph{(scope stated)} The F5 Calculator shall
+          compute results accurate to at least six significant digits for
+          results within the normal representable range.
+          [\texttt{G-02}, \texttt{N-02} --- see note 3]
     \item \textbf{NFR-02.} When a computation exceeds the representable
-          numeric range, the F5 Calculator shall display the cause and remain
-          open for further input. [\texttt{PP-03}]
+          numeric range, the F5 Calculator shall display a message stating
+          the cause, without terminating. [\texttt{PP-03}]
+          (D1 wording unchanged; unmet in D1, now enforced by
+          \texttt{RangeError} for overflow and underflow alike.)
     \item \textbf{NFR-03.} Each error message shall state the cause of the
           error and a corrective action.
           [\texttt{PP-01}, \texttt{G-03}, \texttt{PD-05}]
-    \item \textbf{NFR-02 (unchanged wording, now enforced).} A result outside
-          the representable range is reported instead of returned as
-          \texttt{inf} or zero. [\texttt{PP-03}]
-    \item \textbf{NFR-04 (new).} When a series fails to converge within its
-          iteration limit, the F5 Calculator shall report a convergence error
-          without terminating. [\texttt{PP-03}, \texttt{PD-04}]
-    \item \textbf{DC-01 (revised).} The F5 Calculator shall provide a
+    \item \textbf{NFR-04.} \emph{(new)} When a series fails to converge within
+          its iteration limit, the F5 Calculator shall report a convergence
+          error without terminating. [\texttt{PP-03}, \texttt{PD-04}]
+    \item \textbf{DC-01.} \emph{(revised)} The F5 Calculator shall provide a
           graphical user interface implemented with Tkinter. [\texttt{PD-02}]
-    \item \textbf{DC-02 (new).} The F5 Calculator shall run on a standard
-          Python installation without administrator rights, an IDE, or
-          third-party packages. [\texttt{PL-01}, \texttt{PD-03}]
-    \item \textbf{DC-03 (new).} The implementation shall use no built-in or
-          library functions beyond those for input, output, arithmetic, and
-          user interface design. [\texttt{PD-01}]
+    \item \textbf{DC-02.} \emph{(new)} The F5 Calculator shall run on a
+          standard Python installation without administrator rights, an IDE,
+          or third-party packages. [\texttt{PL-01}, \texttt{PD-03}]
+    \item \textbf{DC-03.} \emph{(new)} The implementation shall use no
+          built-in or library functions beyond those for input, output,
+          arithmetic, and user interface design. [\texttt{PD-01}]
   \end{itemize}
+  \medskip
+  \textbf{Note 3 (NFR-01).} Below $2.2\times10^{-308}$ a double is subnormal
+  and the format itself holds fewer than six significant digits, so the
+  guarantee is stated for the normal range. Measured worst relative error
+  inside that range is $5.2\times10^{-11}$ over 120{,}000 sampled inputs.
 \end{frame}
 
 \begin{frame}{Appendix: Traceability, Both Directions}
   \scriptsize
-  Every requirement cites a source, and every persona element is covered by at
-  least one requirement. This is the check the D1 marker asked for.
+  Every requirement cites an identified source, and every identified source is
+  covered by at least one requirement. This is the check the D1 marker asked for.
   \begin{center}
   \begin{tabular}{ll}
     \toprule
-    Source element & Requirements that cover it \\
+    Identified source & Requirements that cover it \\
     \midrule
     \texttt{PL-01} & DC-02 \\
     \texttt{G-01} & FR-01, FR-02, FR-05 \\
@@ -476,16 +484,16 @@
     \texttt{PP-01} & FR-04, FR-05, NFR-03 \\
     \texttt{PP-02} & FR-03, FR-07 \\
     \texttt{PP-03} & FR-09, NFR-02, NFR-04 \\
-    \texttt{PD-01}     & DC-03 \\
-    \texttt{PD-02}     & DC-01 \\
-    \texttt{PD-03}     & DC-02 \\
-    \texttt{PD-04}     & NFR-04 \\
-    \texttt{PD-05}     & NFR-03 \\
+    \texttt{PD-01} & DC-03 \\
+    \texttt{PD-02} & DC-01 \\
+    \texttt{PD-03} & DC-02 \\
+    \texttt{PD-04} & NFR-04 \\
+    \texttt{PD-05} & NFR-03 \\
     \bottomrule
   \end{tabular}
   \end{center}
-  No requirement is left without a source, and no persona element is left
-  without a requirement.
+  No requirement is left without a source, and no source is left without a
+  requirement.
 \end{frame}
 
 \begin{frame}{Appendix: Subordinate Function Details, \texttt{ln}}
@@ -518,9 +526,48 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame}{Appendix: Range-Safe Order of Multiplication}
+  \footnotesize
+  The answer is the product of four factors: $a$, the two halves
+  $p_1, p_2$ of the integer power $|b|^{n}$, and the fractional factor
+  $q = e^{f \ln |b|}$. Multiplication is associative in mathematics but not in
+  floating point.
+  \begin{itemize}
+    \item $a = 10^{-300}$, $b = 10^{300}$, $x = 2$ has the ordinary answer
+          $10^{300}$, yet $b^{2} = 10^{600}$ overflows first, and multiplying
+          by $a$ afterwards cannot recover it.
+    \item Reaching the subnormal range and coming back destroys most of the
+          significant digits. This is how Python's \texttt{**} loses $15\%$ on
+          $a = 6.7\times10^{248}$, $b = -6.73$, $x = -390$.
+  \end{itemize}
+  \textbf{Rule used.} While the running product is above 1, multiply by the
+  smallest factor left; otherwise multiply by the largest. Opposing factors
+  cancel as they are applied, so the running product stays near 1.
+  \smallskip
+
+  \textbf{Scope, stated honestly.} This covers every input for which
+  $|b|^{n/2}$ is itself representable. Beyond that the calculator reports a
+  \texttt{RangeError} rather than returning a wrong value: conservative there,
+  never incorrect. Measured residue is about one case in 20{,}000 over inputs
+  spanning 600 decades, none inside the persona's working range.
+\end{frame}
+
 \begin{frame}{Appendix: Verification Evidence}
   \scriptsize
+  \texttt{verify\_f5.py} has four sections, one per kind of claim.
   \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Section & What it checks & Result \\
+    \midrule
+    1. Accuracy     & 10 cases against \texttt{**}     & worst $4.6\times10^{-11}$ \\
+    2. Rejection    & 6 inputs that must be refused    & all refused \\
+    3. Range safety & 4 compensated-scale results      & all computed \\
+    4. Convergence  & \texttt{ConvergenceError} forced & reported, no crash \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \medskip
   \begin{tabular}{rrrr}
     \toprule
     $a$ & $b$ & $x$ & relative error \\
@@ -537,31 +584,19 @@
     1   & $-2$      & 0    & exact ($1.0$) \\
     \bottomrule
   \end{tabular}
-  \end{center}
-  \normalsize
+  \medskip
+
   \footnotesize
-  Ten accuracy cases, extended from the nine used in D1. Worst relative error
-  $4.6\times10^{-11}$, satisfying NFR-01 (six significant digits).
-  \texttt{verify\_f5.py} also exercises five rejection cases (FR-03, FR-04,
-  and NFR-02 overflow and underflow) and reports whether each was refused.
-  The built-in \texttt{**} appears only in that script, as the oracle; the
-  calculator itself uses none of it, so DC-03 holds.
+  Ten accuracy cases, extended from the nine used in D1; the extra case is the
+  extreme base $10^{15}$, which D1 could not compute at all, so the worst error
+  is larger than D1's $2.4\times10^{-12}$ over a strictly harder set.
+  The built-in \texttt{**} and \texttt{decimal} appear only in this script, as
+  oracles; the calculator itself uses neither, so DC-03 holds.
 \end{frame}
 
 % ===============================================================
 % GAI / CASTROFF documentation (required for every problem)
 % ===============================================================
-\begin{frame}{Appendix: GAI Usage, Approach}
-  \begin{itemize}
-    \item Tool used for all three problems: Claude (Anthropic), a publicly
-          available assistant based on a large language model.
-    \item Prompts follow the CASTROFF framework: Constraints, Audience,
-          Structure, Tone, Role, Output format, Focus, Function.
-    \item Workflow: prompt, output, human review, refinement, verification.
-          Nothing was accepted until it had been tested against a reference.
-  \end{itemize}
-\end{frame}
-
 \begin{frame}{Appendix: GAI Usage, Problem 5}
   \textbf{Prompt types:} implementation from a specification; defect analysis.
   \medskip
@@ -598,7 +633,7 @@
   \textbf{Problem 7 (requirements).} Prompt type: transformation with gap
   analysis. Example: ``As a requirements engineer [Role], update the D1
   requirements from the D2 code and the marker feedback [Focus], giving each
-  persona element a unique trace identifier [Structure, Constraints], in
+  identified source a unique trace identifier [Structure, Constraints], in
   ISO/IEC/IEEE 29148 style [Output format], for the instructor [Audience],
   objectively [Tone], covering malformed input, quitting, and the difference
   between non-convergence and overflow [Function].''
@@ -619,7 +654,7 @@
     \bibitem{goldberg} D. Goldberg, ``What every computer scientist should
       know about floating-point arithmetic,'' \emph{ACM Computing Surveys},
       vol. 23, no. 1, pp. 5--48, 1991. (Catastrophic cancellation; range
-      reduction.)
+      reduction; subnormal numbers.)
     \bibitem{iso29148} \emph{Systems and Software Engineering: Life Cycle
       Processes: Requirements Engineering}, ISO/IEC/IEEE Std. 29148, 2018.
     \bibitem{castroff} H. Tavakoli, ``The CASTROFF framework: A professional
