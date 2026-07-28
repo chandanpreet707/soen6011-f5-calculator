@@ -95,20 +95,27 @@ a corrective action rather than crashing:
 - `DomainError` — input outside the real domain of a·b^x
 - `ConvergenceError` — a series exceeded its iteration limit
 - `RangeError` — a result too large or small to represent
+- `AlgorithmRangeError` — the result is representable, but an
+  intermediate value of the algorithm is not
 
 `F5Error` is the common base and is never raised directly, so a single
 `except F5Error` catches every calculator error.
 
 ## Accuracy scope
 
-The six-significant-digit guarantee applies to results in the normal
-representable range, of magnitude at least 2.2 × 10⁻³⁰⁸. Below that a
-double is subnormal and the format itself holds fewer than six
-significant digits.
+The six-significant-digit guarantee applies to every finite, nonzero
+result in the normal representable range, of magnitude at least
+2.2 × 10⁻³⁰⁸. Subnormal results are excluded because no uniform
+six-digit bound is guaranteed across that whole range: precision degrades
+gradually, so a subnormal near the normal boundary still carries well over
+six digits while one near zero carries almost none.
 
 Where even half of the integer power `|b|^(n/2)` leaves the representable
-range, the calculator reports a `RangeError` instead of returning a value.
-It is conservative in that corner, never incorrect.
+range, no ordering of the factors can recover it. The exact result may
+still be representable, so the calculator raises `AlgorithmRangeError`
+rather than claiming an overflow or underflow that did not occur. It
+returns no value in that corner, but it never returns a wrong one, and it
+never misdescribes why.
 
 ## Domain rules
 

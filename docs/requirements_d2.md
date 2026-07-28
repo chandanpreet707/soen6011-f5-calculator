@@ -28,6 +28,7 @@ against this document.
 | NFR-01 scope made explicit | D2 measurement: the six-digit guarantee is stated for the normal representable range, since the double format itself carries fewer than six digits for subnormal results |
 | FR-05 trace corrected | D1 feedback: FR-05 traced to "Completeness", not to the persona |
 | FR-06 rewording | The interface is now graphical; there are no prompts |
+| FR-02 qualified; DC-04, NFR-05 added | D2 review: the algorithm has a boundary beyond which an intermediate factor is unrepresentable even when the result is not, so promising "any real x" and reporting a result-range failure were both inaccurate |
 | DC-01 revised; DC-02, DC-03 added | D2/Problem 5: GUI replaces the textual interface; from-scratch and platform constraints made explicit |
 
 ## Sources
@@ -70,7 +71,8 @@ exceptions; **PD-05** error messages helpful to users.
 - **FR-01** The F5 Calculator shall accept real values of a, b, and x in
   decimal notation. [Trace: G-01, N-01]
 - **FR-02** When b > 0, the F5 Calculator shall compute f(x) = a·b^x for any
-  real x. [Trace: G-01]
+  real x within the supported computational range defined by DC-04.
+  [Trace: G-01]  *(D2: qualified — see note 4)*
 - **FR-03** When b = 0 and x ≤ 0, the F5 Calculator shall reject the input
   and display the cause and a corrective action. [Trace: PP-02, G-03]
 - **FR-04** When b < 0 and x is not an integer, the F5 Calculator shall
@@ -97,9 +99,10 @@ exceptions; **PD-05** error messages helpful to users.
 
 ## Non-functional requirements
 
-- **NFR-01** The F5 Calculator shall compute results accurate to at least 6
-  significant digits for results within the normal representable range.
-  [Trace: G-02, N-02]  *(D2: scope stated explicitly — see note 3)*
+- **NFR-01** For every finite, nonzero result within the normal
+  representable range, the F5 Calculator shall provide at least 6
+  significant digits of accuracy. [Trace: G-02, N-02]
+  *(D2: scope stated explicitly — see note 3)*
 - **NFR-02** When a computation exceeds the representable numeric range, the
   F5 Calculator shall display a message stating the cause, without
   terminating. [Trace: PP-03]  *(D1 wording unchanged; now enforced by
@@ -109,6 +112,11 @@ exceptions; **PD-05** error messages helpful to users.
 - **NFR-04** When a series fails to converge within its iteration limit, the
   F5 Calculator shall report a convergence error without terminating.
   [Trace: PP-03, PD-04]  *(new)*
+- **NFR-05** When an input requires an intermediate value outside the
+  supported computational range, the F5 Calculator shall report that the
+  input cannot be evaluated by the current algorithm, distinguishing this
+  from a final-result range failure, without terminating.
+  [Trace: G-03, PP-03, PD-04]  *(new — see note 4)*
 
 ## Design constraints
 
@@ -121,6 +129,10 @@ exceptions; **PD-05** error messages helpful to users.
 - **DC-03** The implementation shall use no built-in or library functions
   beyond those for input, output, arithmetic, and user-interface design.
   [Trace: PD-01]  *(new)*
+- **DC-04** The supported computational range shall be those inputs for
+  which every intermediate factor of the selected algorithm — in
+  particular each half `|b|^(n/2)` of the integer power — is itself
+  representable. [Trace: PD-01]  *(new — see note 4)*
 
 ## Notes on traces without a direct persona need
 
@@ -131,13 +143,26 @@ completeness. It is recorded as such rather than being attached to an
 invented persona need. This corrects the D1 trace, which read
 "Completeness" and cited no source at all.
 
-**Note 3 — NFR-01.** The six-significant-digit guarantee is stated for the
-normal representable range, that is for results of magnitude at least
-2.2 x 10^-308. Below that, doubles are subnormal and the format itself
-holds fewer than six significant digits, so no implementation could meet
-the requirement there. Measured worst relative error inside the normal
-range is 5.2 x 10^-11 over 120,000 randomly sampled inputs, against a
+**Note 3 — NFR-01.** Subnormal results are excluded because the
+implementation does not guarantee a uniform six-significant-digit
+relative-accuracy bound throughout the entire subnormal range. Precision
+there degrades gradually rather than all at once: a subnormal close to the
+normal boundary still carries well over six significant digits, while one
+close to zero carries almost none. Stating the requirement over the normal
+range keeps it precise and verifiable. Measured worst relative error inside
+that range is 5.2 x 10^-11 over 120,000 randomly sampled inputs, against a
 requirement of 10^-6.
+
+**Note 4 — FR-02, DC-04 and NFR-05.** Algorithm B forms the integer power
+in two halves so that a very large or very small `a` can compensate. For a
+small set of inputs, even one half leaves the representable range, and no
+ordering of the factors can recover it. In those cases the exact result may
+still be representable, so reporting it as an overflow or underflow would
+be untrue. DC-04 names that boundary, FR-02 is qualified by it rather than
+promising every real x, and NFR-05 requires the condition to be reported
+under its own name. The code raises `AlgorithmRangeError`, kept separate
+from `RangeError`. Measured frequency is about 1 input in 20,000 over
+inputs spanning 600 decades, and none inside the persona's working range.
 
 **Note 2 — FR-10.** An explicit exit is a usability requirement rather than
 a stated persona need. It is traced to N-03, since the persona works in
@@ -153,19 +178,19 @@ source induces at least one requirement.
 |---|---|
 | G-01 | FR-01, FR-02, FR-05 |
 | G-02 | NFR-01 |
-| G-03 | FR-03, FR-04, FR-07, FR-08, FR-09, NFR-03 |
+| G-03 | FR-03, FR-04, FR-07, FR-08, FR-09, NFR-03, NFR-05 |
 | N-01 | FR-01, FR-08 |
 | N-02 | NFR-01 |
 | N-03 | FR-06, FR-10 |
 | N-04 | FR-04, FR-07 |
 | PP-01 | FR-04, FR-05, NFR-03 |
 | PP-02 | FR-03, FR-07 |
-| PP-03 | FR-09, NFR-02, NFR-04 |
+| PP-03 | FR-09, NFR-02, NFR-04, NFR-05 |
 | PL-01 | DC-02 |
-| PD-01 | DC-03 |
+| PD-01 | DC-03, DC-04 |
 | PD-02 | DC-01 |
 | PD-03 | DC-02 |
-| PD-04 | NFR-04 |
+| PD-04 | NFR-04, NFR-05 |
 | PD-05 | NFR-03 |
 
 No requirement is left without a source, and no source is left without a
@@ -183,6 +208,7 @@ requirement.
 | NFR-02 | `f5_core.compute_f5` range check, `f5_errors.RangeError` |
 | NFR-03 | `f5_errors.F5Error.__init__` |
 | NFR-04 | `f5_math.MAX_ITER`, `f5_errors.ConvergenceError`; evidenced by `verify_f5.py` section 4 |
+| NFR-05, DC-04 | `f5_core._report_range_failure`, `f5_errors.AlgorithmRangeError`; evidenced by `verify_f5.py` section 3 |
 | DC-01, DC-02 | `f5_gui` |
 | DC-03 | `f5_math` |
 ## Known limitation

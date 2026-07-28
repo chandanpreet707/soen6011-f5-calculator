@@ -11,7 +11,8 @@ Four sections, one per kind of claim:
   1. accuracy      NFR-01, against the built-in ** operator
   2. rejection     FR-03, FR-04, NFR-02: inputs that must be refused
   3. range safety  results that are representable only when the factors
-                   are combined in the right order
+                   are combined in the right order, and the boundary
+                   beyond which the algorithm reports instead of guessing
   4. convergence   NFR-04, forced by lowering the iteration limit
 
 Run:  python3 verify_f5.py
@@ -20,7 +21,8 @@ Run:  python3 verify_f5.py
 from decimal import Decimal, getcontext
 
 from f5_core import compute_f5
-from f5_errors import ConvergenceError, DomainError, RangeError
+from f5_errors import (AlgorithmRangeError, ConvergenceError,
+                       DomainError, RangeError)
 from f5_math import ln
 
 getcontext().prec = 60
@@ -60,6 +62,21 @@ SCALE_CASES = [
     (1e300, 1e-100, 6),       # a compensates a b**n that underflows alone
     (1, 10, -320),            # reciprocal of an overflowing integer power
     (1e-300, 0.5, -2000),     # decay base with a large negative exponent
+]
+
+
+# The boundary of DC-04. In each of these the exact result IS
+# representable, but Algorithm B would have to form an intermediate factor
+# that is not, so NFR-05 requires the calculator to say so rather than
+# claim the result is out of range. The last two are genuine range
+# failures and must still be reported as such.
+BOUNDARY_CASES = [
+    (2.132253711254229e-238, 8.645627300825678e-110, -4.624952379652598,
+     AlgorithmRangeError),
+    (4.432680122329864e-148, 3.510001819757236e-159, -2.1167520077523676,
+     AlgorithmRangeError),
+    (1, 10, 400, RangeError),
+    (1, 0.5, 4000, RangeError),
 ]
 
 
@@ -136,9 +153,11 @@ def scale_section():
     print("-" * 78)
     print("all compensated-scale cases computed: %s (worst rel err %.1e)"
           % (failures == 0, worst))
-    print("  note: a=1, b=10, x=-320 has a SUBNORMAL result, a range in which")
-    print("  the double format itself holds fewer than six significant digits.")
-    print("  NFR-01 is scoped to the normal range for this reason.")
+    print("  note: a=1, b=10, x=-320 has a SUBNORMAL result. NFR-01 is scoped")
+    print("  to the normal range because a uniform six-significant-digit bound")
+    print("  is not guaranteed throughout the subnormal range. Precision there")
+    print("  degrades gradually: values near the normal boundary still carry")
+    print("  well over six digits, values near zero carry almost none.")
 
     # A case where this implementation is MORE accurate than the
     # expression a * b**x. The built-in operator is correctly rounded;
@@ -156,7 +175,27 @@ def scale_section():
           % (ours, relative_error(ours, reference)))
     print("    built-in ** %-22.10g rel err %.1e"
           % (builtin, relative_error(builtin, reference)))
-    return failures == 0
+    # DC-04 and NFR-05: the algorithm boundary must be distinguished from
+    # a genuine range failure, not merged into it.
+    print()
+    print("  algorithm boundary (DC-04, NFR-05)")
+    boundary_failures = 0
+    for a, b, x, expected in BOUNDARY_CASES:
+        try:
+            got = compute_f5(a, b, x)
+            print("    a=%-9g b=%-9g x=%-8g | NOT REPORTED, returned %r"
+                  % (a, b, x, got))
+            boundary_failures += 1
+        except expected as error:
+            print("    a=%-9g b=%-9g x=%-8g | %s"
+                  % (a, b, x, type(error).__name__))
+        except (RangeError, AlgorithmRangeError) as error:
+            print("    a=%-9g b=%-9g x=%-8g | WRONG CLASS: %s, expected %s"
+                  % (a, b, x, type(error).__name__, expected.__name__))
+            boundary_failures += 1
+    print("  each condition reported under the correct class:",
+          boundary_failures == 0)
+    return failures == 0 and boundary_failures == 0
 
 
 def convergence_section():
