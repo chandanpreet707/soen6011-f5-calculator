@@ -2,17 +2,21 @@
 % Student ID: 40324569 | Function F5: a*b^x
 % Compile with: pdflatex d2_f5.tex   (run twice)
 %
-% screenshot1.png, screenshot2.png, screenshot3.png must sit in the same
-% folder as this .tex file.
+% screenshot1.png, screenshot2.png and screenshot3.png must sit in the
+% same folder as this .tex file.
 %
-% MAIN TRACK: 10 slides (title + 9), target under 6 minutes.
-% Everything after \appendix is APPENDIX material, shown on request.
+% MAIN TRACK: 10 slides (title + 9). Everything after \appendix is
+% appendix material, shown on request. Total 24 pages.
 
 \documentclass[11pt]{beamer}
 \usetheme{Madrid}
 \usecolortheme{seahorse}
 \usepackage{booktabs}
 \usepackage{graphicx}
+
+% Remove the navigation arrows. They sit in the bottom-right corner and
+% the last line of a dense slide collides with them.
+\setbeamertemplate{navigation symbols}{}
 
 \title[D2]{SOEN 6011: Deliverable 2 \\ Function F5: $f(x) = ab^{x}$ \\ Problems 5--7}
 % Short forms in [] keep the Madrid footer inside the slide width.
@@ -54,8 +58,8 @@
   \end{tabular}
   \medskip
 
-  \footnotesize The only built-in conversion left anywhere in the calculator is
-  the \texttt{float()} that reads a text entry, which is an input function.
+  {\footnotesize The only built-in conversion left anywhere in the calculator
+  is the \texttt{float()} that reads a text entry, which is an input function.}
 \end{frame}
 
 \begin{frame}{Problem 5: Module Architecture}
@@ -101,7 +105,7 @@
 
   \textbf{4. Range-safe order of multiplication.} The answer is
   $a \cdot p_1 \cdot p_2 \cdot q$; the \emph{order} decides whether it can be
-  reached. See the table.
+  reached.
   \smallskip
 
   \centering
@@ -117,8 +121,9 @@
   \end{tabular}
   \smallskip
 
-  \raggedright On the last row Python's own \texttt{**} is $15\%$ wrong, because it
-  passes through the subnormal range and this implementation does not.
+  \raggedright On the last row, evaluating $b^{x}$ before applying $a$ loses
+  $15\%$: that intermediate is subnormal, where a double holds barely two
+  digits. The ordering never forms it.
 \end{frame}
 
 \begin{frame}{Problem 5: Exception Handling Design}
@@ -132,21 +137,21 @@
       \item \texttt{DomainError}: the input is outside the real domain of $ab^{x}$
       \item \texttt{ConvergenceError}: a series ran past its iteration limit
       \item \texttt{RangeError}: the result is too large or too small to represent
+      \item \texttt{AlgorithmRangeError}: the result is representable, but an
+            intermediate value of the algorithm is not
     \end{itemize}
     \texttt{F5Error} is never raised directly, so one \texttt{except} clause
     catches every calculator error.
-    \item \textbf{Why this matters, and what it answers.} In D1, hitting the
-          iteration limit raised \texttt{OverflowError}. Running out of
-          iterations and producing a number that is too big are different
-          failures with different fixes. They are now separate:
-          \texttt{ConvergenceError} versus \texttt{RangeError}.
-    \item Every message says what went wrong \emph{and} what to do next (NFR-03).
-    \item \textbf{Two defects this design exposed, both now fixed.} D1 returned
-          \texttt{inf} when a result left the representable range, so the
-          interface showed ``f(x) = inf'': no cause, no corrective action,
-          against NFR-02. And a zero multiplier short-circuited the domain
-          rules, so $a = 0,\, b = -2,\, x = 0.5$ returned $0$ instead of being
-          rejected under FR-04.
+    \item \textbf{Why this matters.} In D1, hitting the iteration limit raised
+          \texttt{OverflowError}. Running out of iterations and producing a
+          number that is too big are different failures with different fixes,
+          and are now separate. Every message states the cause \emph{and} a
+          corrective action (NFR-03).
+    \item \textbf{Two defects this design exposed, both fixed.} D1 returned
+          \texttt{inf} for an out-of-range result, so the window showed
+          ``f(x) = inf'': no cause, no action, against NFR-02. And a zero
+          multiplier short-circuited the domain rules, so $a = 0$, $b = -2$,
+          $x = 0.5$ returned $0$ instead of being rejected under FR-04.
   \end{itemize}
 \end{frame}
 
@@ -162,6 +167,7 @@
       \end{center}
   \end{columns}
   \medskip
+  \footnotesize
   \begin{itemize}
     \item Labelled fields for $a$, $b$ and $x$; Compute, Clear and Quit buttons;
           a result area; the valid domain stated before an error can occur.
@@ -178,7 +184,7 @@
 \begin{frame}{Problem 6: Version Control}
   \begin{columns}[T]
     \column{0.53\textwidth}
-      \small
+      \scriptsize
       \begin{itemize}
         \item Public repository:\\
               {\scriptsize\texttt{github.com/chandanpreet707/}\\
@@ -186,12 +192,12 @@
         \item One commit per function or concern. Each message has a short
               instruction-style subject line and a body saying \emph{why} the
               change was made, not just what changed.
-        \item The repository also holds a flowchart for each function in
+        \item The repository also holds a flowchart per function in
               \texttt{docs/flowcharts/}, the updated requirements in
               \texttt{docs/}, and a README with the module map and run
               instructions that need no installation.
-        \item The full history is in the repository; one representative message
-              is enlarged here.
+        \item The full history is in the repository; one representative
+              message is enlarged here.
       \end{itemize}
     \column{0.45\textwidth}
       \begin{center}
@@ -232,22 +238,21 @@
     \column{0.52\textwidth}
       \textbf{What changed.}
       \begin{itemize}
-        \item \textbf{FR-07} (new) reject an entry that is not a decimal number.
-        \item \textbf{FR-08} (new) reject an empty entry field.
-        \item \textbf{FR-09} (new) reject an infinite or not-a-number entry.
-        \item \textbf{FR-10} (new) Quit closes the window and ends the session.
-        \item \textbf{NFR-04} (new) report a convergence failure without
-              terminating.
-        \item \textbf{DC-02, DC-03} (new) standard Python installation; no
-              built-in or library function beyond input, output, arithmetic
-              and interface design.
+        \item \textbf{FR-07 to FR-09} (new) reject an entry that is not a
+              decimal number, an empty field, and a non-finite value.
+        \item \textbf{FR-10} (new) Quit ends the session.
+        \item \textbf{NFR-04, NFR-05} (new) report a convergence failure, and
+              an input the algorithm cannot evaluate safely, each under its
+              own name.
+        \item \textbf{DC-02 to DC-04} (new) standard Python installation; no
+              built-in function beyond input, output, arithmetic and
+              interface; supported computational range defined.
         \item \textbf{FR-05} trace corrected: was ``Completeness'', now
               \texttt{PP-01}, \texttt{G-01}.
-        \item \textbf{FR-06} revised: ``prompt'' has no meaning in a GUI.
-        \item \textbf{DC-01} revised: Tkinter GUI replaces the textual interface.
-        \item \textbf{NFR-01} scope stated: six digits within the normal
-              representable range.
-        \item \textbf{NFR-02} wording unchanged, but now actually enforced.
+        \item \textbf{FR-02} qualified by DC-04; \textbf{FR-06} and
+              \textbf{DC-01} revised for the GUI.
+        \item \textbf{NFR-01} scope stated; \textbf{NFR-02} unchanged, now
+              enforced.
       \end{itemize}
   \end{columns}
 \end{frame}
@@ -314,21 +319,22 @@
     \item Every requirement now traces to a uniquely identified source
           (Problem 7 slide; full list in this appendix).
     \item Malformed, empty and non-finite input, and quitting, are now
-          requirements (FR-07, FR-08, FR-09, FR-10).
+          requirements (FR-07 to FR-10).
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Appendix: Demonstration Plan (ninety seconds)}
   \begin{enumerate}
-    \item Normal growth case: $a = 100$, $b = 1.4$, $x = 3.5$ (the persona's scenario).
+    \item Normal growth case: $a = 100$, $b = 1.4$, $x = 3.5$ (the persona's
+          scenario).
     \item Extreme base now accepted: $b = 10^{15}$ (this failed in D1).
     \item Negative base with a whole-number exponent: $a = 1$, $b = -2$, $x = 3$.
-    \item Rejected input with a corrective message: $b = -2$, $x = 0.5$,
-          then recovery and Quit.
+    \item Rejected input with a corrective message: $b = -2$, $x = 0.5$, then
+          recovery and Quit.
   \end{enumerate}
   \medskip
-  Each case shows one requirement working: FR-02, the range reduction, FR-05,
-  and FR-04 with NFR-03 and FR-10.
+  Each case shows one requirement working: FR-02, the range reduction,
+  FR-05, and FR-04 with NFR-03 and FR-10.
 \end{frame}
 
 \begin{frame}{Appendix: Trace Source Identifiers}
@@ -369,8 +375,9 @@
     \item \textbf{FR-01.} The F5 Calculator shall accept real values of $a$,
           $b$ and $x$ in decimal notation.
           [\texttt{G-01}, \texttt{N-01}]
-    \item \textbf{FR-02.} When $b > 0$, the F5 Calculator shall compute
-          $f(x) = ab^{x}$ for any real $x$. [\texttt{G-01}]
+    \item \textbf{FR-02.} \emph{(qualified)} When $b > 0$, the F5 Calculator
+          shall compute $f(x) = ab^{x}$ for any real $x$ within the supported
+          computational range defined by DC-04. [\texttt{G-01}]
     \item \textbf{FR-03.} When $b = 0$ and $x \le 0$, the F5 Calculator shall
           reject the input and display the cause and a corrective action.
           [\texttt{PP-02}, \texttt{G-03}]
@@ -430,12 +437,12 @@
   here so that the weaker link is visible rather than disguised.
 \end{frame}
 
-\begin{frame}{Appendix: Full Updated Requirements (3 of 3)}
+\begin{frame}{Appendix: Full Updated Requirements (3 of 4)}
   \scriptsize
   \begin{itemize}
-    \item \textbf{NFR-01.} \emph{(scope stated)} The F5 Calculator shall
-          compute results accurate to at least six significant digits for
-          results within the normal representable range.
+    \item \textbf{NFR-01.} \emph{(scope stated)} For every finite, nonzero
+          result within the normal representable range, the F5 Calculator
+          shall provide at least six significant digits of accuracy.
           [\texttt{G-02}, \texttt{N-02} --- see note 3]
     \item \textbf{NFR-02.} When a computation exceeds the representable
           numeric range, the F5 Calculator shall display a message stating
@@ -448,6 +455,24 @@
     \item \textbf{NFR-04.} \emph{(new)} When a series fails to converge within
           its iteration limit, the F5 Calculator shall report a convergence
           error without terminating. [\texttt{PP-03}, \texttt{PD-04}]
+    \item \textbf{NFR-05.} \emph{(new)} When an input requires an
+          intermediate value outside the supported computational range, the
+          F5 Calculator shall report that the input cannot be evaluated by
+          the current algorithm, distinguishing this from a final-result
+          range failure, without terminating.
+          [\texttt{G-03}, \texttt{PP-03}, \texttt{PD-04}]
+  \end{itemize}
+  \medskip
+  \textbf{Note 3 (NFR-01).} Subnormal results are excluded because no
+  uniform six-digit bound holds across that whole range: precision degrades
+  gradually, so a subnormal near the normal boundary still carries well over
+  six digits. Measured worst relative error inside the normal range is
+  $5.2\times10^{-11}$ over 120{,}000 sampled inputs.
+\end{frame}
+
+\begin{frame}{Appendix: Full Updated Requirements (4 of 4)}
+  \scriptsize
+  \begin{itemize}
     \item \textbf{DC-01.} \emph{(revised)} The F5 Calculator shall provide a
           graphical user interface implemented with Tkinter. [\texttt{PD-02}]
     \item \textbf{DC-02.} \emph{(new)} The F5 Calculator shall run on a
@@ -456,18 +481,29 @@
     \item \textbf{DC-03.} \emph{(new)} The implementation shall use no
           built-in or library functions beyond those for input, output,
           arithmetic, and user interface design. [\texttt{PD-01}]
+    \item \textbf{DC-04.} \emph{(new)} The supported computational range
+          shall be those inputs for which every intermediate factor of the
+          selected algorithm --- in particular each half $|b|^{n/2}$ of the
+          integer power --- is itself representable. [\texttt{PD-01}]
   \end{itemize}
   \medskip
-  \textbf{Note 3 (NFR-01).} Below $2.2\times10^{-308}$ a double is subnormal
-  and the format itself holds fewer than six significant digits, so the
-  guarantee is stated for the normal range. Measured worst relative error
-  inside that range is $5.2\times10^{-11}$ over 120{,}000 sampled inputs.
+  \textbf{Note 4 (FR-02, DC-04, NFR-05).} Algorithm B forms the integer
+  power in two halves so that a very large or very small $a$ can compensate.
+  For a small set of inputs even one half leaves the representable range,
+  and no ordering recovers it. The exact result may still be representable,
+  so reporting an overflow would be untrue. DC-04 names the boundary, FR-02
+  is qualified by it rather than promising every real $x$, and NFR-05
+  requires the condition to be reported under its own name. The code raises
+  \texttt{AlgorithmRangeError}, kept separate from \texttt{RangeError}.
+  Measured frequency is about 1 input in 20{,}000 across 600 decades, none
+  inside the persona's working range.
 \end{frame}
 
 \begin{frame}{Appendix: Traceability, Both Directions}
   \scriptsize
   Every requirement cites an identified source, and every identified source is
-  covered by at least one requirement. This is the check the D1 marker asked for.
+  covered by at least one requirement. This is the check the D1 marker asked
+  for.
   \begin{center}
   \begin{tabular}{ll}
     \toprule
@@ -476,18 +512,18 @@
     \texttt{PL-01} & DC-02 \\
     \texttt{G-01} & FR-01, FR-02, FR-05 \\
     \texttt{G-02} & NFR-01 \\
-    \texttt{G-03} & FR-03, FR-04, FR-07, FR-08, FR-09, NFR-03 \\
+    \texttt{G-03} & FR-03, FR-04, FR-07, FR-08, FR-09, NFR-03, NFR-05 \\
     \texttt{N-01} & FR-01, FR-08 \\
     \texttt{N-02} & NFR-01 \\
     \texttt{N-03} & FR-06, FR-10 \\
     \texttt{N-04} & FR-04, FR-07 \\
     \texttt{PP-01} & FR-04, FR-05, NFR-03 \\
     \texttt{PP-02} & FR-03, FR-07 \\
-    \texttt{PP-03} & FR-09, NFR-02, NFR-04 \\
-    \texttt{PD-01} & DC-03 \\
+    \texttt{PP-03} & FR-09, NFR-02, NFR-04, NFR-05 \\
+    \texttt{PD-01} & DC-03, DC-04 \\
     \texttt{PD-02} & DC-01 \\
     \texttt{PD-03} & DC-02 \\
-    \texttt{PD-04} & NFR-04 \\
+    \texttt{PD-04} & NFR-04, NFR-05 \\
     \texttt{PD-05} & NFR-03 \\
     \bottomrule
   \end{tabular}
@@ -537,61 +573,72 @@
           $10^{300}$, yet $b^{2} = 10^{600}$ overflows first, and multiplying
           by $a$ afterwards cannot recover it.
     \item Reaching the subnormal range and coming back destroys most of the
-          significant digits. This is how Python's \texttt{**} loses $15\%$ on
-          $a = 6.7\times10^{248}$, $b = -6.73$, $x = -390$.
+          significant digits. On $a = 6.7 \times 10^{248}$, $b = -6.73$,
+          $x = -390$ the answer is an ordinary $7.85 \times 10^{-75}$, but
+          $b^{x}$ alone is $1.17 \times 10^{-323}$, barely two steps above
+          the smallest double. Writing \texttt{a*b**x} therefore loses
+          $15\%$ before $a$ is applied. Python is not at fault: it returns
+          the correctly rounded value of what it was asked. The ordering
+          avoids asking.
   \end{itemize}
   \textbf{Rule used.} While the running product is above 1, multiply by the
   smallest factor left; otherwise multiply by the largest. Opposing factors
   cancel as they are applied, so the running product stays near 1.
   \smallskip
 
-  \textbf{Scope, stated honestly.} This covers every input for which
-  $|b|^{n/2}$ is itself representable. Beyond that the calculator reports a
-  \texttt{RangeError} rather than returning a wrong value: conservative there,
-  never incorrect. Measured residue is about one case in 20{,}000 over inputs
-  spanning 600 decades, none inside the persona's working range.
+  \textbf{Scope (DC-04, NFR-05).} This covers every input for which
+  $|b|^{n/2}$ is representable. Beyond that the exact result may still be
+  representable, so reporting an overflow would be untrue: the calculator
+  raises \texttt{AlgorithmRangeError} instead. Never a wrong value, and
+  never a wrong reason. About 1 input in 20{,}000 across 600 decades, none
+  inside the persona's working range.
 \end{frame}
 
 \begin{frame}{Appendix: Verification Evidence}
   \scriptsize
   \texttt{verify\_f5.py} has four sections, one per kind of claim.
-  \begin{center}
-  \begin{tabular}{lll}
-    \toprule
-    Section & What it checks & Result \\
-    \midrule
-    1. Accuracy     & 10 cases against \texttt{**}     & worst $4.6\times10^{-11}$ \\
-    2. Rejection    & 6 inputs that must be refused    & all refused \\
-    3. Range safety & 4 compensated-scale results      & all computed \\
-    4. Convergence  & \texttt{ConvergenceError} forced & reported, no crash \\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-  \medskip
-  \begin{tabular}{rrrr}
-    \toprule
-    $a$ & $b$ & $x$ & relative error \\
-    \midrule
-    2   & 3         & 2.5  & $6.0\times10^{-13}$ \\
-    100 & 1.4       & 3.5  & $1.5\times10^{-13}$ \\
-    1   & 2         & 10   & exact ($1024.0$) \\
-    5   & 10        & 0.5  & $1.6\times10^{-12}$ \\
-    1   & 0.5       & 3.5  & $5.2\times10^{-13}$ \\
-    2   & 7         & 3.25 & $5.6\times10^{-13}$ \\
-    1   & $10^{15}$ & 0.9  & $4.6\times10^{-11}$ \\
-    1   & $-2$      & 3    & exact ($-8.0$) \\
-    3   & $-2$      & 4    & exact ($48.0$) \\
-    1   & $-2$      & 0    & exact ($1.0$) \\
-    \bottomrule
-  \end{tabular}
-  \medskip
+  \begin{columns}[T]
+    \column{0.53\textwidth}
+      \resizebox{\linewidth}{!}{%
+      \begin{tabular}{lll}
+        \toprule
+        Section & Checks & Result \\
+        \midrule
+        1. Accuracy     & 10 cases vs \texttt{**}   & $4.6\times10^{-11}$ \\
+        2. Rejection    & 6 refusals required       & all refused \\
+        3. Range safety & 4 compensated scales      & all computed \\
+        4. Convergence  & error forced              & no crash \\
+        \bottomrule
+      \end{tabular}}
+      \medskip
 
-  \footnotesize
-  Ten accuracy cases, extended from the nine used in D1; the extra case is the
-  extreme base $10^{15}$, which D1 could not compute at all, so the worst error
-  is larger than D1's $2.4\times10^{-12}$ over a strictly harder set.
-  The built-in \texttt{**} and \texttt{decimal} appear only in this script, as
-  oracles; the calculator itself uses neither, so DC-03 holds.
+      Ten accuracy cases, extended from D1's nine. The extra case is the
+      extreme base $10^{15}$, which D1 could not compute at all, so the
+      worst error is larger than D1's $2.4\times10^{-12}$ over a strictly
+      harder set.
+      \medskip
+
+      The built-in \texttt{**} and \texttt{decimal} appear only in this
+      script, as oracles.
+    \column{0.45\textwidth}
+      \resizebox{\linewidth}{!}{%
+      \begin{tabular}{rrrr}
+        \toprule
+        $a$ & $b$ & $x$ & rel err \\
+        \midrule
+        2   & 3         & 2.5  & $6.0\times10^{-13}$ \\
+        100 & 1.4       & 3.5  & $1.5\times10^{-13}$ \\
+        1   & 2         & 10   & exact \\
+        5   & 10        & 0.5  & $1.6\times10^{-12}$ \\
+        1   & 0.5       & 3.5  & $5.2\times10^{-13}$ \\
+        2   & 7         & 3.25 & $5.6\times10^{-13}$ \\
+        1   & $10^{15}$ & 0.9  & $4.6\times10^{-11}$ \\
+        1   & $-2$      & 3    & exact \\
+        3   & $-2$      & 4    & exact \\
+        1   & $-2$      & 0    & exact \\
+        \bottomrule
+      \end{tabular}}
+  \end{columns}
 \end{frame}
 
 % ===============================================================
