@@ -14,6 +14,8 @@ Hierarchy:
       DomainError           input outside the real domain of a*b**x
       ConvergenceError      a series exceeded its iteration limit
       RangeError            result too large or small to represent
+      AlgorithmRangeError   result representable, but an intermediate
+                            value of the algorithm is not
 
 F5Error is never raised directly; it exists so that one except clause can
 catch every calculator error.
@@ -73,4 +75,18 @@ class RangeError(F5Error):
     Distinguishes overflow and underflow from a genuine domain error, so
     the user interface can advise reducing the magnitude of x or b rather
     than implying the input was illegal.
+    """
+
+
+class AlgorithmRangeError(F5Error):
+    """Raised when the algorithm cannot form an intermediate value safely.
+
+    Distinct from RangeError. RangeError means the exact result itself
+    lies outside the representable range. This means the exact result is
+    representable, but evaluating it by Algorithm B would require an
+    intermediate factor that is not, so no value is returned rather than
+    a wrong one being returned.
+
+    Kept separate so that the message does not claim a result is
+    unrepresentable when it is not (NFR-05, DC-04).
     """

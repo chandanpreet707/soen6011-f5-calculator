@@ -14,13 +14,56 @@ fractional part, where it converges quickly.
 """
 
 from f5_math import absolute, floor_int, pow_int, ln, exp
-from f5_errors import DomainError, RangeError
+from f5_errors import AlgorithmRangeError, DomainError, RangeError
 
 # The overflow sentinel, formed by arithmetic rather than by float("inf").
 # float() is a built-in type conversion; DC-03 permits only input, output,
 # arithmetic and interface functions, and multiplying two finite numbers
 # past the representable range yields the infinity we need.
 _INF = 1e308 * 10.0
+
+# The two ends of the representable range. These are properties of the
+# IEEE-754 double format, not values from a mathematical table, and the
+# logarithms of them are computed by the from-scratch ln at import.
+_MAX_DOUBLE = 1.7976931348623157e308     # largest finite double
+_MIN_NORMAL = 2.2250738585072014e-308    # smallest normal double
+
+
+def _unusable(v):
+    """True when a factor has left the representable range."""
+    return v != v or v == _INF or v == -_INF or v == 0.0
+
+
+def _report_range_failure(a, b, x):
+    """Raise the error that correctly describes why no value can be formed.
+
+    A factor of the product has left the representable range, but that
+    does not by itself say the ANSWER is out of range. The scale of the
+    exact answer is ln|a| + x*ln|b|, which can be formed even when the
+    factors cannot, so it decides which of two different failures this is:
+
+      NFR-02  the exact result is outside the representable range
+              -> RangeError, overflow or underflow
+      NFR-05  the exact result is representable, but Algorithm B would
+              have to form an intermediate value that is not
+              -> AlgorithmRangeError
+
+    Reporting the second as the first would tell the user that a
+    representable result cannot be represented, which is untrue.
+    """
+    scale = ln(absolute(a)) + x * ln(absolute(b))
+    if scale > _LN_MAX:
+        raise RangeError(
+            "The result is too large to represent (overflow).",
+            "reduce the magnitude of a, b, or x.")
+    if scale < _LN_MIN_NORMAL:
+        raise RangeError(
+            "The result is too small to represent (underflow).",
+            "increase the magnitude of a, b, or x.")
+    raise AlgorithmRangeError(
+        "The exact result is representable, but this input requires an "
+        "intermediate value outside the supported computational range.",
+        "reduce the magnitude of the base or the exponent.")
 
 
 _FACTOR_COUNT = 4
@@ -133,12 +176,15 @@ def compute_f5(a, b, x):
     p1 = pow_int(absolute(b), half)
     p2 = pow_int(absolute(b), magnitude - half)
     if n < 0:
-        if p1 == 0.0 or p2 == 0.0:
-            raise RangeError(
-                "The result is too large to represent (overflow).",
-                "reduce the magnitude of x or b.")
-        p1 = 1.0 / p1
-        p2 = 1.0 / p2
+        p1 = _INF if p1 == 0.0 else 1.0 / p1
+        p2 = _INF if p2 == 0.0 else 1.0 / p2
+
+    # DC-04: a half of the integer power has left the representable range,
+    # so Algorithm B cannot form this product however the factors are
+    # ordered. Which failure that is depends on the exact answer, not on
+    # the factor, so the decision is delegated.
+    if _unusable(p1) or _unusable(p2):
+        _report_range_failure(a, b, x)
 
     # Fractional part, via the series, only when there is one.
     if f > 0.0:
@@ -167,3 +213,9 @@ def compute_f5(a, b, x):
             "increase the magnitude of a, b, or x.")
 
     return result
+
+
+# Computed once at import by the from-scratch ln, so no logarithm of a
+# format constant is copied from a table.
+_LN_MAX = ln(_MAX_DOUBLE)
+_LN_MIN_NORMAL = ln(_MIN_NORMAL)
