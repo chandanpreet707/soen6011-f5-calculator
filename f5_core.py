@@ -39,16 +39,19 @@ def compute_f5(a, b, x):
             "Zero raised to a non-positive exponent is undefined.",
             "choose x > 0 when b = 0.")
 
-    # A zero multiplier makes the result zero whatever b and x are, and
-    # returning here avoids forming 0 * inf (which is NaN) further down.
-    if a == 0.0:
-        return 0.0
-
     # FR-04: negative base with a non-integer exponent has no real value.
     if b < 0.0 and x != floor_int(x):
         raise DomainError(
             "A negative base with a non-integer exponent has no real value.",
             "use an integer x when b < 0.")
+
+    # A zero multiplier makes the result zero whatever b and x are, and
+    # returning here avoids forming 0 * inf (which is NaN) further down.
+    # This test sits BELOW the two domain rules on purpose: an input that
+    # FR-03 or FR-04 rejects must be rejected whatever the value of a, so
+    # a = 0 must not become a shortcut past the domain of the function.
+    if a == 0.0:
+        return 0.0
 
     # Split the exponent: x = n + f, with n whole and f in [0, 1).
     n = floor_int(x)
