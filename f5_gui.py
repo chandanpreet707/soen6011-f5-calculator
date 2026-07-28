@@ -87,8 +87,8 @@ class F5App:
             self.entries[name] = entry
 
         # Domain note. The persona's complaint was that tools give no
-        # indication of the valid domain (P-PAIN-02) and no guidance on
-        # valid ranges (P-NEED-04), so it is stated before an error occurs,
+        # indication of the valid domain (PP-02) and no guidance on
+        # valid ranges (N-04), so it is stated before an error occurs,
         # not only after one.
         tk.Label(root,
                  text="Domain:   b > 0 \u2192 any x      "
