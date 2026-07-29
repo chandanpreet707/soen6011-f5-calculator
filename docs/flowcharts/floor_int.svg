@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 560" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 470" font-family="Helvetica, Arial, sans-serif">
   <defs>
     <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
       <path d="M0,0 L7,3 L0,6 z" fill="#444"/>
@@ -17,52 +17,39 @@
     line, polyline { stroke:#444; stroke-width:1.5; fill:none; }
   </style>
 
-  <text class="ttl" x="220" y="32" text-anchor="middle">floor_int(y): greatest integer &#8804; y</text>
+  <text class="ttl" x="170" y="32" text-anchor="middle">floor_int(y): greatest whole number &#8804; y</text>
 
-  <ellipse class="term" cx="220" cy="82" rx="80" ry="23"/>
-  <text class="t" x="220" y="87" text-anchor="middle">Start: input y</text>
-  <line x1="220" y1="105" x2="220" y2="132" marker-end="url(#a)"/>
+  <ellipse class="term" cx="170" cy="88" rx="105" ry="23"/>
+  <text class="t" x="170" y="93" text-anchor="middle">Start: input y</text>
+  <line x1="170" y1="111" x2="170" y2="150" marker-end="url(#a)"/>
 
-  <rect class="box" x="115" y="132" width="210" height="54" rx="8"/>
-  <text class="t" x="220" y="154" text-anchor="middle">n = int(y)</text>
-  <text class="s" x="220" y="174" text-anchor="middle">cuts decimals, toward zero</text>
-  <line x1="220" y1="186" x2="220" y2="214" marker-end="url(#a)"/>
+  <rect class="box" x="60" y="150" width="220" height="60" rx="8"/>
+  <text class="t" x="170" y="176" text-anchor="middle">n = y // 1.0</text>
+  <text class="s" x="170" y="196" text-anchor="middle">floor division, one arithmetic step</text>
+  <line x1="170" y1="210" x2="170" y2="252" marker-end="url(#a)"/>
 
-  <polygon class="dec" points="220,214 335,270 220,326 105,270"/>
-  <text class="t" x="220" y="264" text-anchor="middle">y &lt; 0  and</text>
-  <text class="t" x="220" y="285" text-anchor="middle">y not equal n ?</text>
+  <ellipse class="term" cx="170" cy="275" rx="105" ry="23"/>
+  <text class="t" x="170" y="280" text-anchor="middle">Return n</text>
 
-  <polyline points="105,270 55,270 55,362" marker-end="url(#a)"/>
-  <text class="lbl" x="78" y="262">yes</text>
-  <rect class="box" x="10" y="362" width="110" height="42" rx="8"/>
-  <text class="t" x="65" y="388" text-anchor="middle">n = n &#8722; 1</text>
+  <text class="s" x="170" y="330" text-anchor="middle">No branch is needed: floor division already</text>
+  <text class="s" x="170" y="348" text-anchor="middle">rounds toward minus infinity, for every sign of y.</text>
 
-  <polyline points="335,270 395,270 395,440"/>
-  <text class="lbl" x="345" y="262">no</text>
+  <rect class="pan" x="315" y="52" width="605" height="386" rx="10"/>
 
-  <polyline points="55,404 55,440 220,440"/>
-  <polyline points="395,440 220,440"/>
-  <line x1="220" y1="440" x2="220" y2="464" marker-end="url(#a)"/>
+  <text class="sub" x="335" y="80">Why F5 needs the floor</text>
+  <text class="t" x="335" y="106">Algorithm B splits the exponent x into a whole part n</text>
+  <text class="t" x="335" y="128">and a leftover f in [0, 1):   x = n + f,   n = floor_int(x)</text>
+  <text class="t" x="335" y="156">Elodie reads her culture at x = 3.5 h:</text>
+  <text class="t" x="355" y="178">n = 3 whole doublings, computed exactly by pow_int</text>
+  <text class="t" x="355" y="200">f = 0.5 of a doubling, computed by the series</text>
+  <text class="t" x="335" y="228">A reading before time zero, x = &#8722;2.5 h:</text>
+  <text class="t" x="355" y="250">floor(&#8722;2.5) = &#8722;3, so f = &#8722;2.5 &#8722; (&#8722;3) = 0.5,</text>
+  <text class="t" x="355" y="272">which stays inside [0, 1) as the series requires.</text>
 
-  <ellipse class="term" cx="220" cy="492" rx="80" ry="24"/>
-  <text class="t" x="220" y="497" text-anchor="middle">Return n</text>
-
-  <rect class="pan" x="470" y="55" width="390" height="470" rx="10"/>
-  <text class="sub" x="665" y="88" text-anchor="middle">Why F5 needs the floor</text>
-  <text class="s" x="490" y="118">Algorithm B splits the exponent x into a</text>
-  <text class="s" x="490" y="138">whole part n and a leftover f in [0, 1):</text>
-  <text class="t" x="510" y="166">x = n + f,   n = floor_int(x)</text>
-  <text class="t" x="490" y="204">Elodie reads her culture at x = 3.5 h:</text>
-  <text class="s" x="510" y="228">n = 3 whole doublings (exact, pow_int)</text>
-  <text class="s" x="510" y="248">f = 0.5 of a doubling (series, exp and ln)</text>
-  <text class="t" x="490" y="286">A reading before time zero, x = &#8722;2.5 h:</text>
-  <text class="s" x="510" y="310">int(&#8722;2.5) gives &#8722;2, but the floor is &#8722;3.</text>
-  <text class="s" x="510" y="330">With n = &#8722;3 the leftover is</text>
-  <text class="s" x="510" y="350">f = x &#8722; n = &#8722;2.5 &#8722; (&#8722;3) = 0.5</text>
-  <text class="s" x="510" y="370">which stays inside [0, 1) as required.</text>
-  <text class="s" x="510" y="390">With the wrong n = &#8722;2 the leftover would</text>
-  <text class="s" x="510" y="410">be &#8722;0.5, outside the range, and the</text>
-  <text class="s" x="510" y="430">series step would receive a bad input.</text>
-  <text class="t" x="490" y="468">So the one line correction n = n &#8722; 1 is</text>
-  <text class="t" x="490" y="490">what keeps negative exponents correct.</text>
+  <text class="sub" x="335" y="308">What changed in D2</text>
+  <text class="t" x="335" y="334">D1 used n = int(y), which truncates toward zero:</text>
+  <text class="t" x="335" y="356">int(&#8722;2.5) is &#8722;2, not &#8722;3, so a correction step</text>
+  <text class="t" x="335" y="378">n = n &#8722; 1 was needed for negative values.</text>
+  <text class="t" x="335" y="404">int() is a built-in type conversion, and DC-03 permits</text>
+  <text class="t" x="335" y="426">only input, output, arithmetic and interface functions.</text>
 </svg>
