@@ -6,6 +6,8 @@ Engineering Processes), Summer 2026.
 
 Student ID: 40324569. Function: F5.
 
+Repository: https://github.com/chandanpreet707/soen6011-f5-calculator
+
 ## What it does
 
 Evaluates a·b^x for real a, b, and x, including negative and fractional
