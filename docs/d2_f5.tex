@@ -604,7 +604,7 @@
         \toprule
         Section & Checks & Result \\
         \midrule
-        1. Accuracy     & 10 cases vs \texttt{**}   & $4.6\times10^{-11}$ \\
+        1. Accuracy     & 10 cases vs built-in power & $4.6\times10^{-11}$ \\
         2. Rejection    & 6 refusals required       & all refused \\
         3. Range safety & 4 compensated scales      & all computed \\
         4. Convergence  & error forced              & no crash \\
@@ -618,8 +618,9 @@
       harder set.
       \medskip
 
-      The built-in \texttt{**} and \texttt{decimal} appear only in this
-      script, as oracles.
+      Python's power operator and the \texttt{decimal} module appear only
+      in this script, as oracles. The calculator itself uses neither, so
+      DC-03 holds.
     \column{0.45\textwidth}
       \resizebox{\linewidth}{!}{%
       \begin{tabular}{rrrr}
