@@ -18,6 +18,14 @@
 % the last line of a dense slide collides with them.
 \setbeamertemplate{navigation symbols}{}
 
+% Report the length of the MAIN TRACK in the footer. Without this the
+% counter reads "1 / 25" on the title slide, which announces a
+% twenty-five slide talk when the talk is ten slides and the rest is
+% backup material shown only on request.
+\newcommand{\backupbegin}{%
+  \newcounter{finalframe}\setcounter{finalframe}{\value{framenumber}}}
+\newcommand{\backupend}{\setcounter{framenumber}{\value{finalframe}}}
+
 \title[D2]{SOEN 6011: Deliverable 2 \\ Function F5: $f(x) = ab^{x}$ \\ Problems 5--7}
 % Short forms in [] keep the Madrid footer inside the slide width.
 % The long forms in {} are what appear on the title slide.
@@ -296,6 +304,7 @@
 
 % ===============================================================
 \appendix
+\backupbegin
 % APPENDIX SLIDES: required evidence, shown on request
 % ===============================================================
 
@@ -714,5 +723,7 @@
       Tkinter documentation.)
   \end{thebibliography}
 \end{frame}
+
+\backupend
 
 \end{document}
