@@ -12,6 +12,7 @@ skipped rather than failing the suite.
 """
 
 import inspect
+import re
 import unittest
 
 try:
@@ -137,6 +138,31 @@ class TestExceptionPolicy(unittest.TestCase):
         """Visibility is the point: the defect must reach the terminal."""
         source = inspect.getsource(f5_gui.F5App.report_callback_exception)
         self.assertIn("traceback.print_exception", source)
+
+    def test_every_method_called_on_self_exists(self):
+        """REGRESSION (D3). A refactor deleted a method still in use.
+
+        Splitting __init__ into builder methods removed add_button
+        while three call sites remained, and the window raised
+        AttributeError on launch. Nothing in this suite noticed,
+        because instantiating F5App needs a display and none of the
+        other tests construct it.
+
+        This closes that gap without a display: it reads the class
+        source for calls and callback references made through self,
+        and checks each one resolves. It would have failed on that
+        refactor, and it fails on any future one that repeats it.
+        """
+        source = inspect.getsource(f5_gui.F5App)
+        called = set(re.findall(r"self\.(\w+)\(", source))
+        referenced = set(re.findall(r"=\s*self\.(\w+)\s*[,)]", source))
+        assigned = set(re.findall(r"self\.(\w+)\s*=", source))
+        for name in sorted((called | referenced) - assigned):
+            with self.subTest(name=name):
+                self.assertTrue(
+                    hasattr(f5_gui.F5App, name),
+                    f"F5App calls self.{name} but no such attribute "
+                    f"exists")
 
     def test_input_error_is_chained_from_value_error(self):
         """The original cause must not be discarded (W0707)."""
