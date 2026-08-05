@@ -14,6 +14,7 @@ its cause and a corrective action (NFR-03).
 """
 
 import tkinter as tk
+import traceback
 from tkinter import font as tkfont
 
 from f5_core import compute_f5
@@ -40,10 +41,10 @@ def parse_real(text, name):
                          "enter a number such as 2, -0.5, or 10.")
     try:
         value = float(stripped)
-    except ValueError:
+    except ValueError as exc:
         raise InputError("'" + text + "' is not a number in decimal notation "
                          "for " + name + ".",
-                         "enter a value such as 2, -0.5, or 10.")
+                         "enter a value such as 2, -0.5, or 10.") from exc
     # Reject NaN and +/- infinity. float() accepts the strings "nan", "inf"
     # and "1e400", so this test is what actually enforces FR-09.
     # value != value is true only for NaN.
@@ -123,6 +124,11 @@ class F5App:
         root.bind("<Escape>", lambda event: root.destroy())  # FR-10
         self.entries["a"].focus_set()
 
+        # Any fault that escapes a callback is routed to this app's own
+        # handler rather than to Tkinter's default. See the method for
+        # why the handler exists and what it deliberately does not do.
+        root.report_callback_exception = self.report_callback_exception
+
     def on_compute(self):
         """Validate all three inputs, compute, and show result or error."""
         self.result.config(text="")
@@ -135,14 +141,39 @@ class F5App:
         except F5Error as error:
             self.message.config(text=str(error))
             return
-        except Exception as error:  # pylint: disable=broad-except
-            # The persona's pain point is a tool that dies without warning.
-            # Any unforeseen fault is reported in the window instead.
-            self.message.config(
-                text="Unexpected internal error: " + str(error)
-                     + " Corrective action: press Clear and try other values.")
-            return
         self.result.config(text="f(x) = " + repr(value))
+
+    def report_callback_exception(self, exc_type, exc_value, exc_tb):
+        """Surface a fault that escaped a callback, without hiding it.
+
+        D3 revision. D2 wrapped on_compute in a bare `except Exception`
+        that turned every fault into one generic sentence. The window
+        survived, but a programming defect became indistinguishable
+        from a handled condition and left no trace anywhere, so neither
+        testing nor the developer could see it. on_compute now catches
+        F5Error and nothing else.
+
+        Removing that block does not reintroduce PP-03. Tkinter's
+        CallWrapper already intercepts an exception raised inside a
+        callback, hands it to this method, and continues the event
+        loop, so the window does not close either way. What this
+        override adds is honesty: the full traceback goes to the
+        terminal for the developer, and the window says plainly that
+        the fault is internal rather than dressing it up as an ordinary
+        input error the user could act on.
+
+        DC-03 note. traceback is used here for diagnostic OUTPUT, in
+        the same category as print, and performs no part of computing
+        ab^x. The mathematics remains from scratch in f5_math and
+        f5_core.
+        """
+        traceback.print_exception(exc_type, exc_value, exc_tb)
+        self.result.config(text="")
+        self.message.config(
+            text="Internal fault: a defect in the calculator, not a "
+                 "problem with your input. Details have been written to "
+                 "the terminal. Corrective action: press Clear and "
+                 "continue; report the traceback if it recurs.")
 
     def on_clear(self):
         """Empty every field and both output lines."""
