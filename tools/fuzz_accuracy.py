@@ -160,9 +160,14 @@ def report(judged, refused, worst, worst_case):
     print(f"  samples judged       {judged:>10}")
     print(f"  refused under DC-04  {refused:>10}")
     print()
+    ratio = float(worst) / D2_CLAIM
+    if ratio >= 1.0:
+        verdict = f"{ratio:.1f}x worse"
+    else:
+        verdict = f"{1.0 / ratio:.0f}x better"
     print(f"  worst relative error {float(worst):>10.2e}")
     print(f"  D2 documented claim  {D2_CLAIM:>10.2e}")
-    print(f"  ratio                {float(worst) / D2_CLAIM:>9.1f}x")
+    print(f"  vs D2 claim          {verdict:>10}")
     print()
     if worst_case is not None:
         print("  worst case:")
