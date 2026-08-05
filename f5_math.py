@@ -16,9 +16,25 @@ Build order (one commit per function):
 
 from f5_errors import ConvergenceError, DomainError
 
-# Series stopping tolerance. Supports NFR-01 (at least 6 significant
-# digits) with a wide margin.
-EPSILON = 1e-12
+# Series stopping tolerance, applied as an ABSOLUTE bound on the terms.
+#
+# D3 revision. D2 used 1e-12 on the reasoning that six significant
+# digits (NFR-01) left a wide margin. That reasoning was wrong, because
+# this tolerance does not bound the answer -- it bounds _LN2. The
+# constant at the foot of this module is computed by this same series,
+# so it inherited about 1e-12 of ABSOLUTE error. Range reduction then
+# forms ln(b) = ln(m) + p * _LN2, where p counts halvings and reaches
+# into the hundreds for an extreme base (p = 934 at b = 1.6e281). That
+# multiplies the 1e-12 into roughly 1e-9 of absolute error in ln(b),
+# and exp() converts an absolute error in its argument into a RELATIVE
+# error in its result, so the 1e-9 arrived in the answer intact.
+#
+# 1e-17 drives the series to the double-precision floor instead.
+# Measured: _LN2 absolute error 1.03e-12 -> 2.45e-16; worst sampled
+# relative error 8.98e-10 -> 2.05e-13 over 200000 log-uniform samples
+# under a fixed seed. Cost is 5 extra terms in ln and 11 in exp,
+# against a cap of 10000. Located with pdb; see tools/defect_probe.py.
+EPSILON = 1e-17
 
 # Safety cap so that a series can never loop forever.
 MAX_ITER = 10000

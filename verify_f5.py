@@ -203,8 +203,8 @@ def convergence_section():
     print()
     print("4. CONVERGENCE (NFR-04)")
     print("-" * 78)
-    print("  After range reduction ln needs about 30 terms and exp about")
-    print("  1700, against a cap of 10000, so no admissible input reaches")
+    print("  After range reduction ln needs about 16 terms and exp about")
+    print("  1900, against a cap of 10000, so no admissible input reaches")
     print("  the cap. It is exercised here by lowering the limit.")
     try:
         ln(1.9, max_iter=3)
