@@ -20,6 +20,13 @@ from f5_errors import AlgorithmRangeError, DomainError, RangeError
 # float() is a built-in type conversion; DC-03 permits only input, output,
 # arithmetic and interface functions, and multiplying two finite numbers
 # past the representable range yields the infinity we need.
+# Semantic Versioning (https://semver.org). MAJOR is
+# incremented for each deliverable because each has changed
+# the public behaviour of the calculator in an incompatible
+# way: D2 replaced the interface, D3 changed which faults
+# are caught and the values returned for extreme bases.
+__version__ = "3.0.0"
+
 _INF = 1e308 * 10.0
 
 # The two ends of the representable range. These are properties of the
@@ -31,6 +38,11 @@ _MIN_NORMAL = 2.2250738585072014e-308    # smallest normal double
 
 def _unusable(v):
     """True when a factor has left the representable range."""
+    # v != v is true only for NaN. math.isnan would say so more plainly
+    # but is a library function, and DC-03 permits only input, output,
+    # arithmetic and interface functions. Pylint does not know the
+    # idiom, so the check is suppressed rather than the code changed.
+    # pylint: disable=comparison-with-itself
     return v != v or v == _INF or v == -_INF or v == 0.0
 
 
@@ -203,6 +215,8 @@ def compute_f5(a, b, x):
     # NFR-02: report a result that left the representable range instead of
     # handing back inf or 0.0. Without this the interface would display
     # "f(x) = inf", which states no cause and offers no corrective action.
+    # result != result is true only for NaN; see _unusable above.
+    # pylint: disable=comparison-with-itself
     if result != result or result == _INF or result == -_INF:
         raise RangeError(
             "The result is too large to represent (overflow).",

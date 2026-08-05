@@ -17,7 +17,7 @@ import tkinter as tk
 import traceback
 from tkinter import font as tkfont
 
-from f5_core import compute_f5
+from f5_core import __version__, compute_f5
 from f5_errors import F5Error, InputError
 
 
@@ -47,7 +47,10 @@ def parse_real(text, name):
                          "enter a value such as 2, -0.5, or 10.") from exc
     # Reject NaN and +/- infinity. float() accepts the strings "nan", "inf"
     # and "1e400", so this test is what actually enforces FR-09.
-    # value != value is true only for NaN.
+    # value != value is true only for NaN. math.isnan is a library
+    # function, which DC-03 does not permit, so the idiom stays and
+    # Pylint's objection to it is suppressed here deliberately.
+    # pylint: disable=comparison-with-itself
     if value != value or value == _INF or value == -_INF:
         raise InputError("The value for " + name + " is not finite.",
                          "enter an ordinary decimal number.")
@@ -59,7 +62,8 @@ class F5App:
 
     def __init__(self, root):
         self.root = root
-        root.title("F5 Calculator  f(x) = a \u00b7 b^x")
+        root.title("F5 Calculator  f(x) = a \u00b7 b^x  v"
+                   + __version__)
         root.configure(padx=20, pady=16)
         root.resizable(False, False)
 
@@ -185,6 +189,7 @@ class F5App:
 
 
 def main():
+    """Open the calculator window and run the Tkinter event loop."""
     root = tk.Tk()
     F5App(root)
     root.mainloop()

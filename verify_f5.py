@@ -93,7 +93,8 @@ def relative_error(ours, reference):
 def accuracy_section():
     """NFR-01: at least six significant digits."""
     print("1. ACCURACY (NFR-01)")
-    print("a      b        x      | ours              | reference         | rel err")
+    print("a      b        x      | ours              "
+          "| reference         | rel err")
     print("-" * 78)
     worst = 0.0
     for a, b, x in CASES:
@@ -101,10 +102,10 @@ def accuracy_section():
         ref = a * (b ** x)
         err = abs(ours - ref) / abs(ref) if ref else abs(ours - ref)
         worst = max(worst, err)
-        print("%-6g %-8g %-6g | %-17.10g | %-17.10g | %.1e"
-              % (a, b, x, ours, ref, err))
+        print(f"{a:<6g} {b:<8g} {x:<6g} | {ours:<17.10g} "
+              f"| {ref:<17.10g} | {err:.1e}")
     print("-" * 78)
-    print("worst relative error over %d cases: %.1e" % (len(CASES), worst))
+    print(f"worst relative error over {len(CASES)} cases: {worst:.1e}")
     print("NFR-01 (>= 6 significant digits) satisfied:", worst < 1e-6)
     return worst < 1e-6
 
@@ -118,12 +119,12 @@ def rejection_section():
     for a, b, x, expected in REJECT_CASES:
         try:
             got = compute_f5(a, b, x)
-            print("  a=%-8g b=%-7g x=%-6g | NOT REJECTED, returned %r"
-                  % (a, b, x, got))
+            print(f"  a={a:<8g} b={b:<7g} x={x:<6g} | "
+                  f"NOT REJECTED, returned {got!r}")
             failures += 1
         except expected as error:
-            print("  a=%-8g b=%-7g x=%-6g | %s: %s"
-                  % (a, b, x, type(error).__name__, error.cause))
+            print(f"  a={a:<8g} b={b:<7g} x={x:<6g} | "
+                  f"{type(error).__name__}: {error.cause}")
     print("-" * 78)
     print("all rejection cases behaved as required:", failures == 0)
     return failures == 0
@@ -141,21 +142,24 @@ def scale_section():
         try:
             ours = compute_f5(a, b, x)
         except RangeError as error:
-            print("  a=%-8g b=%-8g x=%-6g | REJECTED (%s) but %.6g is representable"
-                  % (a, b, x, error.cause, reference))
+            print(f"  a={a:<8g} b={b:<8g} x={x:<6g} | "
+                  f"REJECTED ({error.cause}) but "
+                  f"{float(reference):.6g} is representable")
             failures += 1
             continue
         err = relative_error(ours, reference)
-        if err > worst:
-            worst = err
-        print("  a=%-8g b=%-8g x=%-6g | ours %-14.8g | exact %-14.8g | rel err %.1e"
-              % (a, b, x, ours, reference, err))
+        worst = max(worst, err)
+        print(f"  a={a:<8g} b={b:<8g} x={x:<6g} | ours {ours:<14.8g} "
+              f"| exact {float(reference):<14.8g} "
+              f"| rel err {float(err):.1e}")
     print("-" * 78)
-    print("all compensated-scale cases computed: %s (worst rel err %.1e)"
-          % (failures == 0, worst))
+    print(f"all compensated-scale cases computed: {failures == 0} "
+          f"(worst rel err {float(worst):.1e})")
     print("  note: a=1, b=10, x=-320 has a SUBNORMAL result. NFR-01 is scoped")
-    print("  to the normal range because a uniform six-significant-digit bound")
-    print("  is not guaranteed throughout the subnormal range. Precision there")
+    print("  to the normal range because a uniform six-significant-digit"
+          " bound")
+    print("  is not guaranteed throughout the subnormal range. Precision"
+          " there")
     print("  degrades gradually: values near the normal boundary still carry")
     print("  well over six digits, values near zero carry almost none.")
 
@@ -169,12 +173,12 @@ def scale_section():
     ours = compute_f5(a, b, x)
     builtin = a * (b ** x)
     print()
-    print("  a=%g, b=%g, x=%g" % (a, b, x))
-    print("    exact       %.10g" % reference)
-    print("    ours        %-22.10g rel err %.1e"
-          % (ours, relative_error(ours, reference)))
-    print("    built-in ** %-22.10g rel err %.1e"
-          % (builtin, relative_error(builtin, reference)))
+    print(f"  a={a:g}, b={b:g}, x={x:g}")
+    print(f"    exact       {float(reference):.10g}")
+    print(f"    ours        {ours:<22.10g} "
+          f"rel err {float(relative_error(ours, reference)):.1e}")
+    print(f"    built-in ** {builtin:<22.10g} "
+          f"rel err {float(relative_error(builtin, reference)):.1e}")
     # DC-04 and NFR-05: the algorithm boundary must be distinguished from
     # a genuine range failure, not merged into it.
     print()
@@ -183,15 +187,21 @@ def scale_section():
     for a, b, x, expected in BOUNDARY_CASES:
         try:
             got = compute_f5(a, b, x)
-            print("    a=%-9g b=%-9g x=%-8g | NOT REPORTED, returned %r"
-                  % (a, b, x, got))
+            print(f"    a={a:<9g} b={b:<9g} x={x:<8g} | "
+                  f"NOT REPORTED, returned {got!r}")
             boundary_failures += 1
         except expected as error:
-            print("    a=%-9g b=%-9g x=%-8g | %s"
-                  % (a, b, x, type(error).__name__))
+            print(f"    a={a:<9g} b={b:<9g} x={x:<8g} | "
+                  f"{type(error).__name__}")
+        # pylint: disable=duplicate-except
+        # False positive. `expected` above is bound per iteration to ONE
+        # class from BOUNDARY_CASES, so this clause catches the OTHER
+        # range class and reports a wrong classification. Pylint cannot
+        # resolve a dynamic exception class, so it assumes an overlap
+        # that never occurs at run time.
         except (RangeError, AlgorithmRangeError) as error:
-            print("    a=%-9g b=%-9g x=%-8g | WRONG CLASS: %s, expected %s"
-                  % (a, b, x, type(error).__name__, expected.__name__))
+            print(f"    a={a:<9g} b={b:<9g} x={x:<8g} | WRONG CLASS: "
+                  f"{type(error).__name__}, expected {expected.__name__}")
             boundary_failures += 1
     print("  each condition reported under the correct class:",
           boundary_failures == 0)
@@ -211,14 +221,15 @@ def convergence_section():
         print("  ln(1.9, max_iter=3) | NO ERROR RAISED")
         return False
     except ConvergenceError as error:
-        print("  ln(1.9, max_iter=3) | ConvergenceError: %s" % error.cause)
-        print("                      | corrective action: %s" % error.action)
+        print(f"  ln(1.9, max_iter=3) | ConvergenceError: {error.cause}")
+        print(f"                      | corrective action: {error.action}")
     print("-" * 78)
     print("NFR-04 exercised and reported without terminating: True")
     return True
 
 
 def main():
+    """Run the four sections and report whether all of them passed."""
     results = [accuracy_section(), rejection_section(),
                scale_section(), convergence_section()]
     print()

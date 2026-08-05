@@ -163,8 +163,9 @@ def exp(y, eps=EPSILON, max_iter=MAX_ITER):
     k = 1
     while absolute(term) >= eps:
         if k >= max_iter:
-            raise ConvergenceError("The exponential series failed to converge.",
-                                   "reduce the magnitude of x.")
+            raise ConvergenceError(
+                "The exponential series failed to converge.",
+                "reduce the magnitude of x.")
         term *= y / k
         total += term
         k += 1
